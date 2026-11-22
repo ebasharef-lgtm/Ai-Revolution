@@ -7,6 +7,39 @@
 :root{--ink:#f3f8ff;--soft:#bbcee5;--cyan:#83deff;--deep:#030912}*{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;touch-action:pan-y}
 #world,#vignette,#ui,#stars,#geoMap{position:fixed;inset:0}#particleCanvas{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .8s ease}#particleCanvas.visible{opacity:1}#world{z-index:0;transition:opacity .7s ease}#geoMap{z-index:1;opacity:0;pointer-events:none;transition:opacity .9s ease;visibility:hidden}#geoMap.visible{opacity:1;visibility:visible}#geoMap .maplibregl-control-container{pointer-events:none}#geoMap .maplibregl-ctrl-bottom-right{bottom:64px!important;right:20px!important}#world canvas{width:100%;height:100%;display:block}#vignette{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(0,4,12,.68) 0%,rgba(0,4,12,.12) 42%,rgba(0,4,12,.24) 100%),linear-gradient(0deg,rgba(0,3,10,.56),transparent 27%)}#stars{z-index:-1}
+
+/* Immersive particle-led visual storytelling; replaces Topic 2's floating fact-card layout. */
+#kineticScene{position:absolute;inset:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(10px);transition:opacity .65s ease,transform .65s ease;isolation:isolate}
+#kineticScene.active{visibility:visible;opacity:1;transform:none}
+.kineticKicker{position:absolute;top:15.5%;left:7%;font-size:clamp(11px,1.15vw,16px);letter-spacing:.26em;color:#83d9ff;font-weight:650}
+.kineticTitle{position:absolute;top:20%;left:7%;right:7%;font-size:clamp(34px,5.1vw,78px);font-weight:800;line-height:1.04;letter-spacing:-.059em;text-shadow:0 7px 30px #0008;max-width:1200px}
+.kineticTitle em{font-style:normal;color:#9bdcff}
+.kineticDetail{position:absolute;top:36%;left:7%;width:min(85vw,930px);font-size:clamp(14px,1.55vw,21px);line-height:1.45;color:#bfd5ec}
+.kineticLanguage{position:absolute;top:55%;width:26%;min-height:15%;padding:22px 15px;border:1px solid rgba(136,196,255,.42);border-radius:23px;background:linear-gradient(130deg,rgba(10,28,54,.87),rgba(5,13,27,.82));box-shadow:0 0 25px #143d741e;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px}
+.kineticLanguage.left{left:6.5%}.kineticLanguage.right{right:6.5%}
+.kineticLanguage strong{font-size:clamp(22px,3vw,46px);font-weight:570;white-space:nowrap;letter-spacing:.015em}
+.kineticLanguage span{font-size:clamp(10px,.9vw,13px);letter-spacing:.21em;color:#8bd3fd}
+.kineticSignal{position:absolute;left:40%;right:40%;top:77%;text-align:center;color:#a5e9ff;font-size:clamp(12px,1.13vw,16px);letter-spacing:.18em;opacity:.8}
+.kineticHubs{position:absolute;left:7%;right:7%;top:68%;display:flex;justify-content:space-between;gap:6px}
+.kineticHub{font-size:clamp(11px,1.26vw,17px);color:#d6ecff;text-align:center;letter-spacing:.08em;font-weight:630;text-shadow:0 2px 20px #010d23}
+.kineticHub:before{content:'';display:block;width:11px;height:11px;border-radius:50%;background:#c2f5ff;box-shadow:0 0 18px #51caff;margin:0 auto 15px}
+.kineticHub small{display:block;color:#8cafd2;font-size:.72em;letter-spacing:.15em;margin-top:8px}
+.kineticRoles{position:absolute;top:62%;left:9%;right:9%;display:flex;align-items:center;justify-content:space-between;gap:25px}
+.kineticRole{width:36%;font-size:clamp(21px,2.8vw,40px);line-height:1.14;letter-spacing:-.03em;font-weight:750}
+.kineticRole span{display:block;font-size:clamp(12px,1.2vw,17px);letter-spacing:.02em;color:#a9c3de;font-weight:430;margin-top:13px;line-height:1.4}
+.kineticRole:last-child{text-align:right}.kineticFlowLabel{font-size:clamp(10px,1.2vw,15px);text-align:center;letter-spacing:.15em;color:#8cd8ff;white-space:nowrap}
+.kineticDivide{position:absolute;top:64%;left:9%;right:9%;display:flex;justify-content:space-between;text-align:center;gap:20px}
+.kineticDivide>div{width:39%;font-size:clamp(19px,2.6vw,35px);font-weight:740;letter-spacing:-.035em}
+.kineticDivide span{display:block;font-size:clamp(12px,1.1vw,16px);color:#9fb8d5;font-weight:450;margin-top:10px;line-height:1.4}
+.kineticSummary{position:absolute;top:66%;left:10%;right:10%;display:flex;justify-content:space-between;color:#b7deee;font-size:clamp(15px,1.7vw,23px);font-weight:560;gap:20px;text-shadow:0 2px 22px #020710}
+.kineticSummary strong{color:#e7f5ff}.kineticSummary>div:last-child{text-align:right}
+/* Final counter occupies the left; the moving globe and floating web stay visible on the right. */
+#countWrap.final{top:44%;left:5.5%;right:auto;transform:translateY(-50%);width:min(49vw,680px);text-align:left;z-index:6}
+#countWrap.final .question{font-size:clamp(15px,1.75vw,26px);white-space:normal;line-height:1.3}
+#countWrap.final .digits{font-size:clamp(46px,6.4vw,104px)}
+#countWrap.final .caption{font-size:clamp(11px,1.05vw,15px);white-space:normal;line-height:1.45}
+@media(max-width:760px){.kineticKicker{top:17%;left:6%}.kineticTitle{top:22%;left:6%;font-size:clamp(30px,6.4vw,54px)}.kineticDetail{top:36%;left:6%;width:88vw}.kineticLanguage{top:56%;width:29%;min-height:14%;padding:12px 5px;border-radius:15px;gap:8px}.kineticLanguage.left{left:4%}.kineticLanguage.right{right:4%}.kineticLanguage strong{font-size:clamp(15px,3.2vw,26px)}.kineticHubs{top:70%;left:5%;right:5%}.kineticHub{font-size:10px}.kineticRoles{left:6%;right:6%}.kineticDivide{left:6%;right:6%}}
+
 #ui{z-index:3;pointer-events:none}.chrome{position:absolute;top:24px;left:28px;font-size:11px;color:#a1bbdc;letter-spacing:.16em}.chrome b{font-weight:550;color:#d7efff}
 #countWrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:min(95vw,960px);transition:top 1000ms cubic-bezier(.2,.8,.2,1),left 1000ms,right 1000ms,transform 1000ms,width 1000ms,opacity 600ms;opacity:0}
 #countWrap.show{opacity:1}#countWrap.corner{top:27px;left:auto;right:30px;transform:none;width:auto;text-align:right}
@@ -37,6 +70,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 <div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>S</b> SOURCES · <b>F</b> FULLSCREEN</div>
 <div id="countWrap"><div class="question">HOW MANY MESSAGES ARE SENT TO AI?</div><div class="digits" id="count">0</div><div class="caption">Estimated ChatGPT messages · 29,000 / second (2025 reference)</div></div>
 <div id="headline"><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p id="subtitle"></p></div>
+<div id="kineticScene" aria-live="polite"></div>
 <div id="fact"><div class="meta" id="factMeta"></div><h2 id="factTitle"></h2><p id="factBody"></p></div>
 <div id="hint">SWIPE OR TAP TO BEGIN</div>
 <div id="chapter"><div class="lines"><i></i><i></i><i></i><i></i></div><span id="chapterText"></span></div>
@@ -120,6 +154,26 @@ const network=new THREE.Group(),routeGroup=new THREE.Group();earthHolder.add(net
 const networkPairs=[['California','Netherlands'],['Netherlands','Taiwan'],['Taiwan','Malaysia'],['Malaysia','Dubai'],['London','NewYork'],['Tokyo','Singapore'],['Dubai','London'],['Seoul','Taiwan'],['Sydney','Singapore'],['Mumbai','Dubai'],['NewYork','California'],['California','Tokyo']];
 for(const [a,b] of networkPairs){let line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(greatArc(a,b,.28)),new THREE.LineBasicMaterial({color:0x5bc5ff,transparent:true,opacity:.68,depthWrite:false}));network.add(line)}
 for(const name of Object.keys(spots)){const p=surface(...spots[name],sphereR+.055);const dot=new THREE.Mesh(new THREE.SphereGeometry(.026,12,10),new THREE.MeshBasicMaterial({color:0xbffbff}));dot.position.copy(p);network.add(dot);}
+
+// Final sequence: an animated web of orbiting particles wrapping the real 3D globe.
+const finalWeb=new THREE.Group();earthHolder.add(finalWeb);finalWeb.visible=false;
+const finalDotN=410,finalDotXYZ=new Float32Array(finalDotN*3);
+for(let i=0;i<finalDotN;i++){
+ const a=i*2.399963229728653,z=1-2*(i+.5)/finalDotN,r=Math.sqrt(1-z*z);
+ const orbit=2.0+.35*Math.sin(i*.91);finalDotXYZ[i*3]=orbit*Math.cos(a)*r;finalDotXYZ[i*3+1]=orbit*z;finalDotXYZ[i*3+2]=orbit*Math.sin(a)*r;
+}
+const finalDotGeo=new THREE.BufferGeometry();finalDotGeo.setAttribute('position',new THREE.BufferAttribute(finalDotXYZ,3));
+const finalDotPts=new THREE.Points(finalDotGeo,new THREE.PointsMaterial({color:0x8ce5ff,size:.045,transparent:true,opacity:.9,depthWrite:false,sizeAttenuation:true}));finalWeb.add(finalDotPts);
+const finalMeshPoints=[];
+for(let i=0;i<finalDotN;i+=13){const j=(i+13)%finalDotN;const a=new THREE.Vector3().fromArray(finalDotXYZ,i*3),b=new THREE.Vector3().fromArray(finalDotXYZ,j*3);if(a.distanceTo(b)<1.65)finalMeshPoints.push(a,b)}
+const webEdges=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(finalMeshPoints),new THREE.LineBasicMaterial({color:0x61b9ff,transparent:true,opacity:.36,depthWrite:false}));finalWeb.add(webEdges);
+const webRingGroup=new THREE.Group();finalWeb.add(webRingGroup);
+for(const [rotY,rotX,radius] of [[.12,.43,2.05],[.82,-.37,2.25],[-.6,.74,2.4]]){
+ const line=new THREE.Mesh(new THREE.TorusGeometry(radius,.008,5,180),new THREE.MeshBasicMaterial({color:0x67ceff,transparent:true,opacity:.36,depthWrite:false}));line.rotation.set(rotX,rotY,.1);webRingGroup.add(line);
+}
+const webOrbs=[];
+for(let i=0;i<7;i++){const orb=new THREE.Mesh(new THREE.SphereGeometry(.037,10,10),new THREE.MeshBasicMaterial({color:0xdbfaff}));finalWeb.add(orb);webOrbs.push(orb)}
+
 const targetMarker=new THREE.Group();earthHolder.add(targetMarker);targetMarker.visible=false;
 const targetDot=new THREE.Mesh(new THREE.SphereGeometry(.054,20,16),new THREE.MeshBasicMaterial({color:0xe9ffff,depthWrite:false}));targetMarker.add(targetDot);
 const targetRing=new THREE.Mesh(new THREE.RingGeometry(.105,.137,40),new THREE.MeshBasicMaterial({color:0x80edff,transparent:true,opacity:.95,side:THREE.DoubleSide,depthWrite:false}));targetMarker.add(targetRing);
@@ -189,43 +243,73 @@ function setParticleMode(mode){
  particleMode=mode; particleGoal=particleIndex[mode]??0;
  particleCanvas.classList.toggle('visible',mode!=='off');
 }
+// The 2D particle visual is deliberately the STORY in Topic 2, not decorative background.
+const particleStars=Array.from({length:110},(_,i)=>({x:(i*.618033988749895)%1,y:(i*.754877666)%1}));
 function drawParticles(ms){
  if(!particleCanvas.classList.contains('visible'))return;
  const t=ms*.001,dt=Math.min(.06,(ms-particleLast)*.001||.016);particleLast=ms;
- particleShape+=(particleGoal-particleShape)*Math.min(1,dt*2.3);
+ particleShape+=(particleGoal-particleShape)*Math.min(1,dt*2.4);
  const ctx=particleCtx,w=pw,h=ph;
  ctx.clearRect(0,0,w,h);
- const cx=w*(w<720?.55:.59),cy=h*.53,R=Math.min(w*.26,h*.34,275);
- const glow=ctx.createRadialGradient(cx,cy,4,cx,cy,R*2.75);
- glow.addColorStop(0,'rgba(47,101,218,.17)');glow.addColorStop(.5,'rgba(36,53,129,.065)');glow.addColorStop(1,'rgba(0,0,0,0)');
- ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+ const cx=w*.5,cy=h*.635,R=Math.min(w*.265,h*.255,278),m=particleShape;
+ const phase=Math.max(0,Math.min(5,m));
+ const glow=ctx.createRadialGradient(cx,cy,2,cx,cy,R*3);
+ glow.addColorStop(0,'rgba(45,103,213,.13)');glow.addColorStop(.6,'rgba(33,69,139,.05)');glow.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
  ctx.save();ctx.globalCompositeOperation='screen';
- const rot=t*.11+particleShape*.45;
+ const rot=t*.16+m*.37;
+ const sphere=(d)=>{const xx=d.x*Math.cos(rot)-d.z*Math.sin(rot),zz=d.x*Math.sin(rot)+d.z*Math.cos(rot);return {x:cx+xx*R,y:cy+d.y*R,depth:zz,alpha:.28+.58*(zz+1)/2}};
+ // Positions are continuous across scene changes, so the whole network morphs on swipe.
+ function shape(k,i,d){
+   const spherePos=sphere(d);if(k===0)return spherePos;
+   if(k===1){ // signal running between Japanese and English panels
+      const track=Math.floor(i/75),u=((i%75)/75+t*(.16+(track%4)*.015))%1;
+      const local=Math.sin(u*Math.PI),y=h*.645+Math.sin(u*Math.PI*2.6+t*.85+track*1.1)*h*.036+((track%6)-2.5)*h*.008;
+      return {x:w*(.345+.31*u),y,depth:1,alpha:.32+.62*local};
+   }
+   if(k===2){ // international trade hubs; streams travel along actual hub links in diagram
+      const hubs=[[.14,.64],[.36,.56],[.63,.64],[.86,.56]],path=i%3,u=((i%110)/110+t*(.085+(i%7)*.005))%1;
+      const a=hubs[path],b=hubs[path+1];
+      return {x:w*(a[0]+(b[0]-a[0])*u),y:h*(a[1]+(b[1]-a[1])*u+Math.sin(u*Math.PI*2+t*.55+i*.04)*.027),depth:1,alpha:.2+.75*Math.sin(u*Math.PI)};
+   }
+   if(k===3){ // old routine tasks fracture, re-form as new work and skills
+      const newRole=i%4<2,seed=i*.219;const sign=newRole?1:-1;
+      const theta=d.phase*.43+t*(newRole?.16:-.12);
+      return {x:w*(.5+sign*(.15+Math.abs(Math.sin(seed))*.19))+Math.sin(theta)*w*.018,y:h*(.60+d.y*.128)+Math.cos(theta*2)*h*.019,depth:newRole?.8:.25,alpha:newRole?.94:.42};
+   }
+   if(k===4){ // access gap: dense left network, disconnected sparse right
+      const strong=i<390,idx=strong?i:i-390;
+      return {x:w*(strong?.23+.18*d.x:.74+.16*d.x),y:h*(.61+d.y*(strong?.17:.09)),depth:strong?1:-.1,alpha:strong?.83:.25};
+   }
+   // Converge into a renewed connected globe after advantages / risks.
+   const rr=R*(1+.11*Math.sin(t*.5+d.phase*.04));
+   return {x:cx+(spherePos.x-cx)*rr/R,y:cy+(spherePos.y-cy)*rr/R,depth:spherePos.depth,alpha:spherePos.alpha};
+ }
+ const lo=Math.floor(phase),hi=Math.min(5,lo+1),blend=(phase-lo);
  const projected=[];
  for(let i=0;i<PARTICLE_N;i++){
-  const d=particleDots[i],xx=d.x*Math.cos(rot)-d.z*Math.sin(rot),zz=d.x*Math.sin(rot)+d.z*Math.cos(rot);
-  const theta=Math.atan2(d.y,xx),wave=1+.045*Math.sin(t*1.1+d.phase);
-  let radius=R*wave,x=cx+xx*radius,y=cy+d.y*radius;
-  const m=particleShape;
-  // Translation: dots flow as an encrypted signal in a narrow spiral between Japan and Dubai.
-  const translation=Math.max(0,1-Math.abs(m-1)*1.4);
-  const trade=Math.max(0,1-Math.abs(m-2)*1.25);
-  const jobs=Math.max(0,1-Math.abs(m-3)*1.2);
-  const divide=Math.max(0,1-Math.abs(m-4)*1.15);
-  const summary=Math.max(0,1-Math.abs(m-5)*1.15);
-  if(translation){const a=i*.25+t*1.35;const px=cx+((i%80)/80-.5)*R*2.3,py=cy+Math.sin(a)*R*.38; x=x*(1-translation)+px*translation;y=y*(1-translation)+py*translation;}
-  if(trade){const px=cx+Math.cos(d.phase*.45+t*.55)*R*(.4+Math.abs(d.x)),py=cy+Math.sin(d.phase*.45+t*.55)*R*.65;x=x*(1-trade)+px*trade;y=y*(1-trade)+py*trade;}
-  if(jobs){const side=(i%2===0?-1:1),px=cx+side*(R*.5+Math.abs(xx)*R*.58),py=cy+d.y*R*.78;x=x*(1-jobs)+px*jobs;y=y*(1-jobs)+py*jobs;}
-  if(divide){const dense=i<PARTICLE_N*.74,px=cx+(dense?-1:1)*(R*.54+Math.abs(xx)*R*(dense?.65:.9)),py=cy+d.y*R*(dense?.92:.55);x=x*(1-divide)+px*divide;y=y*(1-divide)+py*divide;}
-  if(summary){const a=theta*2.1+t*.28,px=cx+Math.cos(a)*R*(1.25+.15*Math.sin(d.phase)),py=cy+Math.sin(theta*1.4)*R*.8;x=x*(1-summary)+px*summary;y=y*(1-summary)+py*summary;}
-  const alpha=.22+.55*(zz+1)/2,size=zz>0?1.6:1.0;
-  ctx.beginPath();ctx.arc(x,y,size+(i%23===0?1.3:0),0,Math.PI*2);
-  ctx.fillStyle=`rgba(${i%9===0?'183,146,255':'122,185,255'},${alpha})`;ctx.fill();projected.push({x,y,zz});
+   const d=particleDots[i],a=shape(lo,i,d),b=shape(hi,i,d),x=a.x+(b.x-a.x)*blend,y=a.y+(b.y-a.y)*blend;
+   const dep=a.depth+(b.depth-a.depth)*blend,alpha=Math.max(.08,a.alpha+(b.alpha-a.alpha)*blend);
+   projected.push({x,y,dep,alpha});
  }
- ctx.lineWidth=.65;
- for(let i=0;i<140;i+=2){const a=projected[(i*7)%PARTICLE_N],b=projected[(i*7+37)%PARTICLE_N];if(a.zz<-.2||b.zz<-.2)continue;
-  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
-  ctx.strokeStyle=`rgba(99,160,255,${.035+Math.max(0,Math.sin(t+i))*.045})`;ctx.stroke();
+ function segment(a,b,opacity=.14,width=1){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineWidth=width;ctx.strokeStyle=`rgba(113,195,255,${opacity})`;ctx.stroke()}
+ function beacon(x,y,rad=6,alpha=1){const g=ctx.createRadialGradient(x,y,0,x,y,rad*4.2);g.addColorStop(0,`rgba(224,253,255,${alpha})`);g.addColorStop(.2,`rgba(92,203,255,${alpha*.5})`);g.addColorStop(1,'rgba(92,203,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rad*4.2,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(214,249,255,${alpha})`;ctx.beginPath();ctx.arc(x,y,rad*.4,0,Math.PI*2);ctx.fill()}
+ // Draw the explanatory network geometry behind its own particles.
+ const weights=Array.from({length:6},(_,k)=>Math.max(0,1-Math.abs(phase-k)));
+ if(weights[0]>.02||weights[5]>.02){const v=Math.max(weights[0],weights[5]);for(let j=0;j<125;j+=3){const a=projected[(j*13)%PARTICLE_N],b=projected[(j*13+19)%PARTICLE_N];if(a.dep<-.2||b.dep<-.2)continue;segment(a,b,.05*v,.55)}}
+ if(weights[1]>.02){const v=weights[1];for(let track=0;track<5;track++){
+   const yy=h*(.635+(track-2)*.018);ctx.beginPath();ctx.moveTo(w*.335,yy);ctx.bezierCurveTo(w*.46,yy-h*.07,w*.54,yy+h*.07,w*.665,yy);ctx.strokeStyle=`rgba(70,172,245,${.14*v})`;ctx.lineWidth=1.2;ctx.stroke();
+   for(let j=0;j<4;j++){const u=(t*.14+(j/4)+track*.113)%1;const x=w*(.335+.33*u),y=yy-Math.sin(u*Math.PI*2)*h*.029;beacon(x,y,3.8,.7*v)}
+ }}
+ if(weights[2]>.02){const v=weights[2],hubs=[[.14,.64],[.36,.56],[.63,.64],[.86,.56]];for(let i=0;i<3;i++){
+  const a={x:w*hubs[i][0],y:h*hubs[i][1]},b={x:w*hubs[i+1][0],y:h*hubs[i+1][1]};
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo((a.x+b.x)/2,(a.y+b.y)/2-h*.13,b.x,b.y);ctx.lineWidth=1.8;ctx.strokeStyle=`rgba(105,210,255,${.53*v})`;ctx.stroke();
+  for(let j=0;j<3;j++){const u=(t*.16+j/3+i*.13)%1,x=a.x+(b.x-a.x)*u,y=a.y+(b.y-a.y)*u-2*h*.13*u*(1-u);beacon(x,y,3.4,.86*v)}
+ }for(const hub of hubs)beacon(w*hub[0],h*hub[1],8,v)}
+ if(weights[3]>.02){const v=weights[3];for(let i=0;i<40;i++){const a=projected[i*6],b=projected[(i*6+19)%PARTICLE_N];if(a.x<w*.5&&b.x<w*.5&&i%3)continue;segment(a,b,(a.x>w*.5?.26:.05)*v,1.0)}}
+ if(weights[4]>.02){const v=weights[4];for(let i=0;i<135;i++){const a=projected[i*3],b=projected[(i*3+11)%390];if(a.x<w*.49&&b.x<w*.49)segment(a,b,.22*v,.75)}ctx.beginPath();ctx.setLineDash([5,12]);ctx.moveTo(w*.5,h*.48);ctx.lineTo(w*.5,h*.84);ctx.strokeStyle=`rgba(162,180,218,${.25*v})`;ctx.stroke();ctx.setLineDash([])}
+ for(let i=0;i<PARTICLE_N;i++){
+  const q=projected[i],size=(i%23===0?2.2:1.2)+(q.dep>0?.28:0);
+  ctx.beginPath();ctx.arc(q.x,q.y,size,0,Math.PI*2);ctx.fillStyle=`rgba(${i%11===0?'191,156,255':'131,205,255'},${q.alpha})`;ctx.fill();
  }
  ctx.restore();
 }
@@ -537,17 +621,27 @@ const slides=[
  {kind:'globe',chapter:4,headline:['THE GLOBAL AI REVOLUTION','Built by a connected world.','Its future should benefit the whole world — including people here in Dubai.'],note:'Return to the rotating connected globe and deliver the closing message.'},
  {kind:'end',chapter:4,note:'Look at the counter. Remind audience this is an estimate since your first swipe.'}
 ];
+
+const kineticScene=$('kineticScene');
+const kineticScenes={
+ sphere:`<div class="kineticKicker">02 / OPPORTUNITIES & RISKS</div><div class="kineticTitle">AI connects.<br><em>AI disrupts.</em></div><div class="kineticDetail">One connected world. A technology with opportunities and challenges.</div>`,
+ translation:`<div class="kineticKicker">OPPORTUNITY 01 / COMMUNICATION</div><div class="kineticTitle">ONE MESSAGE.<br><em>TWO LANGUAGES.</em></div><div class="kineticDetail">Watch the signal move through AI translation, connecting people across borders.</div><div class="kineticLanguage left"><strong>こんにちは</strong><span>JAPANESE · TOKYO</span></div><div class="kineticSignal">AI TRANSLATION</div><div class="kineticLanguage right"><strong>Hello!</strong><span>ENGLISH · DUBAI</span></div>`,
+ trade:`<div class="kineticKicker">OPPORTUNITY 02 / GLOBAL LOGISTICS</div><div class="kineticTitle">CONNECTED CITIES.<br><em>SMARTER TRADE.</em></div><div class="kineticDetail">Moving particles trace global routes as AI coordinates demand and deliveries.</div><div class="kineticHubs"><div class="kineticHub">CALIFORNIA<small>TECH</small></div><div class="kineticHub">ROTTERDAM<small>EUROPEAN TRADE</small></div><div class="kineticHub">DUBAI<small>GLOBAL HUB</small></div><div class="kineticHub">SINGAPORE<small>ASIA</small></div></div>`,
+ jobs:`<div class="kineticKicker">CHALLENGE 01 / CHANGING WORK</div><div class="kineticTitle">OLD TASKS BREAK APART.<br><em>NEW SKILLS EMERGE.</em></div><div class="kineticDetail">Watch the network split and reform as jobs and skills evolve.</div><div class="kineticRoles"><div class="kineticRole">ROUTINE TASKS<span>Some work can be automated</span></div><div class="kineticFlowLabel">RETRAINING →</div><div class="kineticRole">NEW ROLES<span>People need new opportunities and skills</span></div></div>`,
+ divide:`<div class="kineticKicker">CHALLENGE 02 / UNEQUAL ACCESS</div><div class="kineticTitle">ONE REVOLUTION.<br><em>UNEQUAL ACCESS.</em></div><div class="kineticDetail">The bright, dense network has opportunities. The sparse network is left behind.</div><div class="kineticDivide"><div>HIGH ACCESS<span>More computing · More skills</span></div><div>LOW ACCESS<span>Less infrastructure · Fewer opportunities</span></div></div>`,
+ summary:`<div class="kineticKicker">THE TWO SIDES OF AI</div><div class="kineticTitle">A GLOBAL OPPORTUNITY.<br><em>A SHARED RESPONSIBILITY.</em></div><div class="kineticDetail">The particles reconnect: global progress works best when more people can participate.</div><div class="kineticSummary"><div><strong>OPPORTUNITIES</strong><br>Communication · Trade</div><div><strong>CHALLENGES</strong><br>Jobs · Access · Privacy</div></div>`
+};
+function setKineticScene(s){
+ const enabled=s.chapter===2&&!!s.dot;
+ kineticScene.classList.toggle('active',enabled);
+ if(enabled){const nextHtml=kineticScenes[s.dot]||kineticScenes.sphere;if(kineticScene.innerHTML!==nextHtml)kineticScene.innerHTML=nextHtml;}
+}
+
 const chapterNames=['','01 / HOW GLOBALISATION SHAPES AI','02 / OPPORTUNITIES & RISKS','03 / AI IN DUBAI','04 / LOCAL SOLUTIONS'];
 function setText(s){
- const head=s.headline;const hideMain=!head||s.kind==='end'||s.kind==='timer';
+ const head=s.headline;const immersive=s.chapter===2;const hideMain=!head||s.kind==='end'||s.kind==='timer'||immersive;setKineticScene(s);
  headline.classList.toggle('show',!hideMain);if(head){$('eyebrow').textContent=head[0];$('title').textContent=head[1];$('subtitle').textContent=head[2]}
- fact.classList.toggle('show',!!s.fact);if(s.fact){$('factMeta').textContent=s.fact[0];$('factTitle').textContent=s.fact[1];$('factBody').textContent=s.fact[2]}
- if(s.kind==='summary'){
-  headline.classList.add('show');$('eyebrow').textContent='OPPORTUNITIES / RISKS';$('title').textContent='Two sides of a global change.';$('subtitle').textContent='Translation · Trade · Research   /   Jobs · Inequality · Privacy';
- }
- if(s.kind==='translation'){
-  fact.classList.add('show');$('factMeta').textContent='AI TRANSLATION';$('factTitle').textContent='こんにちは! → Hello!';$('factBody').textContent='Tokyo to Dubai, through language technology.';
- }
+ fact.classList.toggle('show',!!s.fact&&!immersive);if(s.fact){$('factMeta').textContent=s.fact[0];$('factTitle').textContent=s.fact[1];$('factBody').textContent=s.fact[2]}
  if(s.kind==='end'){headline.classList.remove('show');fact.classList.remove('show')}
  counter.classList.toggle('show',index>0);counter.classList.toggle('corner',index>1&&s.kind!=='end');counter.classList.toggle('final',s.kind==='end');
  $('hint').style.display=index===0?'block':'none';chapter.classList.toggle('show',s.chapter>0&&s.kind!=='end');
@@ -555,7 +649,7 @@ function setText(s){
 }
 function gotoSlide(i){
  navigationVersion++;routeGroup.clear();activeRoute=null;activeTrail=null;cameraPath=null;
- index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);
+ index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);finalWeb.visible=(index>=slides.length-2);earthHolder.position.x=(s.kind==='end'?1.72:0);
  // Load the geographic Dubai map while Topic 2 is on screen, so the first flight isn't blank.
  if(s.chapter===2&&!realMap&&!mapBroken)prepareMap();
  if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');setParticleMode('off');return}
@@ -618,7 +712,14 @@ let touchX=0,touchY=0;document.addEventListener('touchstart',e=>{touchX=e.change
 
 camera.position.copy(globeBase.pos);cameraTarget.copy(globeBase.look);camera.lookAt(cameraTarget);switchMode('none');setText(slides[0]);
 function render(now){requestAnimationFrame(render);const dt=clock.getDelta();frameCamera(now);if(started){$('count').textContent=fmt(((now-startTime)/1000)*29000)}
- if(activeMode==='globe' && !cameraTween && index<=3){earthHolder.rotation.y+=dt*.09}else if(activeMode==='globe' && index===20){earthHolder.rotation.y+=dt*.045}
+ if(activeMode==='globe' && !cameraTween && index<=3){earthHolder.rotation.y+=dt*.09}
+ if(activeMode==='globe' && index>=slides.length-2){
+  earthHolder.rotation.y+=dt*.115;
+  finalWeb.rotation.y+=dt*.21;finalWeb.rotation.x+=dt*.035;webRingGroup.rotation.z+=dt*.095;
+  const elapsed=now*.001;
+  webOrbs.forEach((o,i)=>{const a=elapsed*(.29+i*.043)+i*1.61,r=2.1+.12*Math.sin(a*1.3);o.position.set(r*Math.cos(a),Math.sin(a*.83+i)*.9,r*Math.sin(a));});
+  webEdges.material.opacity=.32+.11*Math.sin(elapsed*1.15);
+ }
  drawParticles(now);
  if(activeMode==='dubai'){
   const elapsed=now*.001;

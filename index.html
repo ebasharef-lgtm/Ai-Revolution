@@ -6,7 +6,7 @@
 <style>
 :root{--ink:#f3f8ff;--soft:#bbcee5;--cyan:#83deff;--deep:#030912}*{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;touch-action:pan-y}
-#world,#vignette,#ui,#stars,#geoMap{position:fixed;inset:0}#world{z-index:0;transition:opacity .7s ease}#geoMap{z-index:1;opacity:0;pointer-events:none;transition:opacity .9s ease;visibility:hidden}#geoMap.visible{opacity:1;visibility:visible}#geoMap .maplibregl-control-container{pointer-events:none}#geoMap .maplibregl-ctrl-bottom-right{bottom:64px!important;right:20px!important}#world canvas{width:100%;height:100%;display:block}#vignette{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(0,4,12,.68) 0%,rgba(0,4,12,.12) 42%,rgba(0,4,12,.24) 100%),linear-gradient(0deg,rgba(0,3,10,.56),transparent 27%)}#stars{z-index:-1}
+#world,#vignette,#ui,#stars,#geoMap{position:fixed;inset:0}#particleCanvas{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .8s ease}#particleCanvas.visible{opacity:1}#world{z-index:0;transition:opacity .7s ease}#geoMap{z-index:1;opacity:0;pointer-events:none;transition:opacity .9s ease;visibility:hidden}#geoMap.visible{opacity:1;visibility:visible}#geoMap .maplibregl-control-container{pointer-events:none}#geoMap .maplibregl-ctrl-bottom-right{bottom:64px!important;right:20px!important}#world canvas{width:100%;height:100%;display:block}#vignette{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(0,4,12,.68) 0%,rgba(0,4,12,.12) 42%,rgba(0,4,12,.24) 100%),linear-gradient(0deg,rgba(0,3,10,.56),transparent 27%)}#stars{z-index:-1}
 #ui{z-index:3;pointer-events:none}.chrome{position:absolute;top:24px;left:28px;font-size:11px;color:#a1bbdc;letter-spacing:.16em}.chrome b{font-weight:550;color:#d7efff}
 #countWrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:min(95vw,960px);transition:top 1000ms cubic-bezier(.2,.8,.2,1),left 1000ms,right 1000ms,transform 1000ms,width 1000ms,opacity 600ms;opacity:0}
 #countWrap.show{opacity:1}#countWrap.corner{top:27px;left:auto;right:30px;transform:none;width:auto;text-align:right}
@@ -24,7 +24,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 #chapter{position:absolute;left:29px;bottom:27px;display:flex;align-items:center;gap:15px;opacity:0;transition:opacity .6s}#chapter.show{opacity:1}#chapter .lines{display:flex;gap:5px}#chapter .lines i{width:27px;height:3px;border-radius:3px;background:#324762}#chapter .lines i.active{background:#75d9ff;box-shadow:0 0 10px #75d9ff}#chapter span{font-size:11px;letter-spacing:.13em;color:#a8bcd5}
 #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:9%;font-size:13px;color:#a4bdd9;letter-spacing:.19em;text-transform:uppercase;animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.4}}
 #sources{position:absolute;z-index:10;padding:19px 21px;border-radius:16px;background:#061322f2;border:1px solid #68c7ef64;color:#d7e5f4;font-size:14px;line-height:1.55;pointer-events:auto;display:none;left:25px;top:67px;max-width:500px}#sources.visible{display:block}#sources a{color:#a4e6ff}
-#veil{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%, rgba(214,240,255,.14), rgba(0,0,0,0) 38%, rgba(0,0,0,.86) 100%), linear-gradient(180deg,rgba(3,10,18,0),rgba(3,10,18,.92));opacity:0;transition:opacity .65s ease;z-index:9}#veil.on{opacity:1}
+#veil{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 53%,rgba(175,230,253,.72) 0%,rgba(61,133,178,.86) 30%,rgba(5,22,42,.96) 100%);opacity:0;transition:opacity .38s ease;z-index:9}#veil.on{opacity:1}
 #overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#020710df;pointer-events:none;text-align:center;padding:20px}#overlay.visible{display:flex}#overlay strong{font-size:clamp(20px,3vw,36px)}
 @media(max-width:850px){#headline{width:min(54vw,600px)}#fact{right:5%;width:34vw;padding:18px}#headline h1{font-size:clamp(28px,4.3vw,55px)}#headline p{font-size:clamp(13px,1.45vw,18px)}}
 @media(max-width:680px){#headline{left:6%;bottom:14%;width:88vw}#fact{left:6%;right:auto;top:23%;width:80vw;padding:16px}#headline h1{font-size:clamp(30px,8vw,45px)}#headline p{font-size:14px}.chrome{font-size:9px;left:14px;top:15px}#countWrap.corner{right:13px;top:43px}#countWrap.corner .caption{display:none}#chapter{left:13px;bottom:15px}#chapter span{font-size:9px}}
@@ -33,7 +33,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 </head>
 <body>
-<div id="world"></div><div id="geoMap" aria-label="3D map of Dubai based on OpenStreetMap"></div><div id="vignette"></div>
+<div id="world"></div><div id="geoMap" aria-label="3D map of Dubai based on OpenStreetMap"></div><canvas id="particleCanvas" aria-hidden="true"></canvas><div id="vignette"></div>
 <div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>S</b> SOURCES · <b>F</b> FULLSCREEN</div>
 <div id="countWrap"><div class="question">HOW MANY MESSAGES ARE SENT TO AI?</div><div class="digits" id="count">0</div><div class="caption">Estimated ChatGPT messages · 29,000 / second (2025 reference)</div></div>
 <div id="headline"><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p id="subtitle"></p></div>
@@ -63,10 +63,10 @@ let realMap=null, mapReady=false, mapBroken=false, mapFlightVersion=0;
 const mapDiv=$('geoMap');
 const dubaiSites={
  skyline:{center:[55.2805,25.1925],zoom:15.4,pitch:67,bearing:19,label:'DOWNTOWN DUBAI'},
- airport:{center:[55.3657,25.2532],zoom:15.3,pitch:63,bearing:42,label:'DUBAI INTERNATIONAL AIRPORT'},
- road:{center:[55.2678,25.1706],zoom:16.0,pitch:68,bearing:40,label:'DUBAI STREETS'},
- port:{center:[55.0600,24.9905],zoom:14.9,pitch:66,bearing:-30,label:'JEBEL ALI PORT'},
- schoolOutside:{center:[55.40215,25.10773],zoom:16.7,pitch:63,bearing:28,label:'GERMAN INTERNATIONAL SCHOOL DUBAI'}
+ airport:{center:[55.3657,25.2532],zoom:17.1,pitch:64,bearing:42,label:'DUBAI INTERNATIONAL AIRPORT'},
+ road:{center:[55.2678,25.1706],zoom:18.0,pitch:70,bearing:40,label:'DUBAI STREETS'},
+ port:{center:[55.0600,24.9905],zoom:16.7,pitch:66,bearing:-30,label:'JEBEL ALI PORT'},
+ schoolOutside:{center:[55.40215,25.10773],zoom:18.2,pitch:76,bearing:6,label:'GERMAN INTERNATIONAL SCHOOL DUBAI'}
 };
 function prepareMap(){
  if(realMap||mapBroken)return;
@@ -86,6 +86,7 @@ function prepareMap(){
       'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],6],
       'fill-extrusion-base':['coalesce',['get','render_min_height'],0]} });}catch(e){console.warn('3D building layer unavailable',e)}
    }
+   installMapModels(realMap);
    if(activeMode==='map'){mapDiv.classList.add('visible');world.style.opacity='0';}
   });
   realMap.on('error',e=>{console.warn('Map tiles unavailable',e)});
@@ -135,12 +136,21 @@ function updateRoute(progress){if(!activeRoute)return;routeProgress=clamp(progre
 // A camera tween, not CSS scale, drives all intercontinental zooms.
 function globePose(lat,lon,d=5.7){const v=surface(lat,lon,1).normalize().applyAxisAngle(new THREE.Vector3(0,1,0),earthHolder.rotation.y);return {pos:v.multiplyScalar(d),look:new THREE.Vector3(0,0,0),fov:44};}
 const globeBase={pos:new THREE.Vector3(0,1,6.2),look:new THREE.Vector3(),fov:44};
-let cameraTween=null;const tweenEase=t=>t*t*(3-2*t);
+let cameraTween=null,cameraPath=null;const tweenEase=t=>t*t*(3-2*t);
 function tweenCamera(to,duration=2600,after){const from={pos:camera.position.clone(),look:cameraTarget.clone(),fov:camera.fov},t0=performance.now();const orbital=activeMode==='globe'&&from.look.length()<.15&&to.look.length()<.15&&from.pos.length()>sphereR+.1&&to.pos.length()>sphereR+.1;
  const arcRotation=orbital?new THREE.Quaternion().setFromUnitVectors(from.pos.clone().normalize(),to.pos.clone().normalize()):null;
  cameraTween={from,to,start:t0,duration,after,orbital,arcRotation};moving=true}
 let cameraTarget=new THREE.Vector3();
-function frameCamera(now){if(!cameraTween)return;const t=clamp((now-cameraTween.start)/cameraTween.duration,0,1),e=tweenEase(t);if(cameraTween.orbital){
+function frameCamera(now){
+ if(cameraPath){
+  const t=clamp((now-cameraPath.start)/cameraPath.duration,0,1),e=tweenEase(t),curve=cameraPath.curve;
+  const here=curve.getPoint(e),ahead=curve.getPoint(Math.min(1,e+.095));
+  if(e>.81)ahead.lerp(new THREE.Vector3(530,7,-31.4),(e-.81)/.19);
+  camera.position.copy(here);camera.fov=lerp(45,56,e);camera.updateProjectionMatrix();cameraTarget.copy(ahead);camera.lookAt(ahead);
+  if(t>=1){cameraPath=null;camera.position.copy(dubaiPoses.schoolInside.pos);cameraTarget.copy(dubaiPoses.schoolInside.look);camera.lookAt(cameraTarget)}
+  return;
+ }
+ if(!cameraTween)return;const t=clamp((now-cameraTween.start)/cameraTween.duration,0,1),e=tweenEase(t);if(cameraTween.orbital){
   const q=new THREE.Quaternion().slerpQuaternions(new THREE.Quaternion(),cameraTween.arcRotation,e);
   const dir=cameraTween.from.pos.clone().normalize().applyQuaternion(q);
   const dist=lerp(cameraTween.from.pos.length(),cameraTween.to.pos.length(),e);
@@ -162,28 +172,64 @@ function travel(from,to){
 }
 
 
-// Topic 2 living dots background
-const dotsGroup=new THREE.Group();canvasScene.add(dotsGroup);dotsGroup.visible=false;
-const DOT_COUNT=1800;const dotPositions=new Float32Array(DOT_COUNT*3);const baseSphere=[];const tempTargets={};
-function randOnSphere(r=1){const u=Math.random()*2-1,t=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u);return [Math.cos(t)*s*r,u*r,Math.sin(t)*s*r]}
-for(let i=0;i<DOT_COUNT;i++){const [x,y,z]=randOnSphere(18+Math.random()*6);baseSphere.push([x,y,z]);dotPositions[i*3]=x;dotPositions[i*3+1]=y;dotPositions[i*3+2]=z;}
-const dotGeo=new THREE.BufferGeometry();dotGeo.setAttribute('position',new THREE.BufferAttribute(dotPositions,3));
-const dotMat=new THREE.PointsMaterial({color:0x9fe9ff,size:.22,transparent:true,opacity:.95,sizeAttenuation:true});
-const dotPoints=new THREE.Points(dotGeo,dotMat);dotsGroup.add(dotPoints);
-const dotCore=new THREE.Mesh(new THREE.IcosahedronGeometry(1.8,1),new THREE.MeshBasicMaterial({color:0x65c9ff,transparent:true,opacity:.15,wireframe:true}));dotsGroup.add(dotCore);
-let dotMode='sphere';
-function buildDotTargets(){
- tempTargets.sphere=baseSphere.map(p=>p.slice());
- tempTargets.translation=baseSphere.map((p,i)=>{const a=(i/DOT_COUNT)*Math.PI*2*10;const r=5+3*Math.sin(i*.09);return [Math.cos(a)*r, (i/DOT_COUNT-.5)*18, Math.sin(a)*r];});
- tempTargets.trade=baseSphere.map((p,i)=>{const cols=60; const row=Math.floor(i/cols), col=i%cols; return [col*0.28-8.2, ((row%26)-13)*0.46, Math.sin(col*.6+row*.3)*1.4];});
- tempTargets.jobs=baseSphere.map((p,i)=>{const side=i<DOT_COUNT/2?-1:1; const j=i%(DOT_COUNT/2); return [side*(5+((j%30)*0.18)), (((j/30)|0)-15)*0.45, Math.sin(j*.4)*1.8];});
- tempTargets.divide=baseSphere.map((p,i)=>{const side=i<DOT_COUNT*.72?-1:1; return [side*(4+Math.random()*7), (Math.random()-.5)*16, (Math.random()-.5)*10];});
- tempTargets.summary=baseSphere.map((p,i)=>{const a=(i/DOT_COUNT)*Math.PI*2*12; const r=8+2*Math.sin(i*.14); return [Math.cos(a)*r, Math.sin(a*.5)*5, Math.sin(a)*r*.75];});
+// Topic 2 particles: based on the user's reference HTML, with 480 delicate blue points.
+// A 2D canvas layer is deliberately used to reproduce the reference's soft, precise look.
+const particleCanvas=document.getElementById('particleCanvas');
+const particleCtx=particleCanvas.getContext('2d');
+const PARTICLE_N=480;
+const particleDots=Array.from({length:PARTICLE_N},(_,i)=>{
+ const a=i*2.3999632297,z=1-2*(i+.5)/PARTICLE_N,r=Math.sqrt(1-z*z);
+ return {x:Math.cos(a)*r,y:z,z:Math.sin(a)*r,phase:i*.27};
+});
+let particleMode='sphere',particleShape=0,particleGoal=0,particleLast=0,pw=0,ph=0,pdpr=1;
+const particleIndex={sphere:0,translation:1,trade:2,jobs:3,divide:4,summary:5};
+function resizeParticles(){pw=innerWidth;ph=innerHeight;pdpr=Math.min(devicePixelRatio||1,2);particleCanvas.width=pw*pdpr;particleCanvas.height=ph*pdpr;particleCanvas.style.width=pw+'px';particleCanvas.style.height=ph+'px';particleCtx.setTransform(pdpr,0,0,pdpr,0,0)}
+resizeParticles();addEventListener('resize',resizeParticles);
+function setParticleMode(mode){
+ particleMode=mode; particleGoal=particleIndex[mode]??0;
+ particleCanvas.classList.toggle('visible',mode!=='off');
 }
-buildDotTargets();
-function setDotMode(mode){dotMode=mode;dotsGroup.visible=true; if(mode==='off') dotsGroup.visible=false;}
-function updateDots(dt,t){if(!dotsGroup.visible)return;const arr=dotGeo.attributes.position.array; const target=tempTargets[dotMode]||tempTargets.sphere; for(let i=0;i<DOT_COUNT;i++){const ii=i*3, tp=target[i]; arr[ii]=lerp(arr[ii],tp[0],0.045); arr[ii+1]=lerp(arr[ii+1],tp[1],0.045); arr[ii+2]=lerp(arr[ii+2],tp[2],0.045);} dotGeo.attributes.position.needsUpdate=true; dotsGroup.rotation.y+=dt*(dotMode==='sphere'?0.14:0.08); dotsGroup.rotation.x=lerp(dotsGroup.rotation.x, dotMode==='translation' ? .4 : (dotMode==='jobs' ? -.15 : .08), .05); dotCore.rotation.x+=dt*.25; dotCore.rotation.y+=dt*.34; dotCore.visible=dotMode==='translation';
- if(dotMode==='trade'){dotsGroup.position.set(12,5,-8);} else if(dotMode==='jobs'){dotsGroup.position.set(8,6,-6);} else if(dotMode==='divide'){dotsGroup.position.set(10,5,-4);} else if(dotMode==='summary'){dotsGroup.position.set(9,4,-8);} else if(dotMode==='translation'){dotsGroup.position.set(6,5,-8);} else {dotsGroup.position.set(0,0,0);} }
+function drawParticles(ms){
+ if(!particleCanvas.classList.contains('visible'))return;
+ const t=ms*.001,dt=Math.min(.06,(ms-particleLast)*.001||.016);particleLast=ms;
+ particleShape+=(particleGoal-particleShape)*Math.min(1,dt*2.3);
+ const ctx=particleCtx,w=pw,h=ph;
+ ctx.clearRect(0,0,w,h);
+ const cx=w*(w<720?.55:.59),cy=h*.53,R=Math.min(w*.26,h*.34,275);
+ const glow=ctx.createRadialGradient(cx,cy,4,cx,cy,R*2.75);
+ glow.addColorStop(0,'rgba(47,101,218,.17)');glow.addColorStop(.5,'rgba(36,53,129,.065)');glow.addColorStop(1,'rgba(0,0,0,0)');
+ ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+ ctx.save();ctx.globalCompositeOperation='screen';
+ const rot=t*.11+particleShape*.45;
+ const projected=[];
+ for(let i=0;i<PARTICLE_N;i++){
+  const d=particleDots[i],xx=d.x*Math.cos(rot)-d.z*Math.sin(rot),zz=d.x*Math.sin(rot)+d.z*Math.cos(rot);
+  const theta=Math.atan2(d.y,xx),wave=1+.045*Math.sin(t*1.1+d.phase);
+  let radius=R*wave,x=cx+xx*radius,y=cy+d.y*radius;
+  const m=particleShape;
+  // Translation: dots flow as an encrypted signal in a narrow spiral between Japan and Dubai.
+  const translation=Math.max(0,1-Math.abs(m-1)*1.4);
+  const trade=Math.max(0,1-Math.abs(m-2)*1.25);
+  const jobs=Math.max(0,1-Math.abs(m-3)*1.2);
+  const divide=Math.max(0,1-Math.abs(m-4)*1.15);
+  const summary=Math.max(0,1-Math.abs(m-5)*1.15);
+  if(translation){const a=i*.25+t*1.35;const px=cx+((i%80)/80-.5)*R*2.3,py=cy+Math.sin(a)*R*.38; x=x*(1-translation)+px*translation;y=y*(1-translation)+py*translation;}
+  if(trade){const px=cx+Math.cos(d.phase*.45+t*.55)*R*(.4+Math.abs(d.x)),py=cy+Math.sin(d.phase*.45+t*.55)*R*.65;x=x*(1-trade)+px*trade;y=y*(1-trade)+py*trade;}
+  if(jobs){const side=(i%2===0?-1:1),px=cx+side*(R*.5+Math.abs(xx)*R*.58),py=cy+d.y*R*.78;x=x*(1-jobs)+px*jobs;y=y*(1-jobs)+py*jobs;}
+  if(divide){const dense=i<PARTICLE_N*.74,px=cx+(dense?-1:1)*(R*.54+Math.abs(xx)*R*(dense?.65:.9)),py=cy+d.y*R*(dense?.92:.55);x=x*(1-divide)+px*divide;y=y*(1-divide)+py*divide;}
+  if(summary){const a=theta*2.1+t*.28,px=cx+Math.cos(a)*R*(1.25+.15*Math.sin(d.phase)),py=cy+Math.sin(theta*1.4)*R*.8;x=x*(1-summary)+px*summary;y=y*(1-summary)+py*summary;}
+  const alpha=.22+.55*(zz+1)/2,size=zz>0?1.6:1.0;
+  ctx.beginPath();ctx.arc(x,y,size+(i%23===0?1.3:0),0,Math.PI*2);
+  ctx.fillStyle=`rgba(${i%9===0?'183,146,255':'122,185,255'},${alpha})`;ctx.fill();projected.push({x,y,zz});
+ }
+ ctx.lineWidth=.65;
+ for(let i=0;i<140;i+=2){const a=projected[(i*7)%PARTICLE_N],b=projected[(i*7+37)%PARTICLE_N];if(a.zz<-.2||b.zz<-.2)continue;
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+  ctx.strokeStyle=`rgba(99,160,255,${.035+Math.max(0,Math.sin(t+i))*.045})`;ctx.stroke();
+ }
+ ctx.restore();
+}
+
 // 3D Dubai environment. Buildings, airport, highway, ship, cranes, school exterior and interior
 // are geometric objects in real perspective, not flat SVGs.
 function mat(color,roughness=.7,metalness=.15){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
@@ -312,6 +358,124 @@ const signCanvas=document.createElement('canvas');signCanvas.width=1536;signCanv
 // It fades naturally as the camera approaches the glass; the classroom remains actual 3D geometry.
 // Removed the photo billboard that cut through the school's 3D geometry.
 // Exterior detail is now a 3D reconstruction; the geographical approach uses real map data.
+
+// Geographic 3D models. Unlike the fallback city scene, these are rendered DIRECTLY
+// into the MapLibre WebGL canvas, so planes/cars/ships stay visible over the real map.
+const geoModels={};
+const geoVehicleState={};
+const geoFinish=mat(0xf0f5fc,.36,.28),geoMetal=mat(0xa8b8c8,.34,.64),geoWindow=mat(0x184c76,.19,.72);
+function geoScene(key,origin){
+ const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xd1ebff,0x445061,2));
+ const light=new THREE.DirectionalLight(0xfff3de,3.2);light.position.set(-90,130,50);sc.add(light);
+ geoModels[key]={scene:sc,origin};return sc;
+}
+function geoBox(parent,w,h,d,m,x,y,z){return box(w,h,d,m,x,y,z,parent)}
+function geoPlane(parent,mx,my,mz,scale=1){
+ const grp=new THREE.Group();grp.position.set(mx,my,mz);grp.scale.setScalar(scale);parent.add(grp);
+ const fuse=new THREE.Mesh(new THREE.CylinderGeometry(1.65,1.65,30,20),geoFinish);fuse.rotation.z=-Math.PI/2;grp.add(fuse);
+ const nose=new THREE.Mesh(new THREE.ConeGeometry(1.65,7,20),geoFinish);nose.rotation.z=-Math.PI/2;nose.position.x=18.5;grp.add(nose);
+ const wings=new THREE.Shape();wings.moveTo(-8,0);wings.lineTo(2,-24);wings.lineTo(9,-24);wings.lineTo(12,0);wings.lineTo(9,24);wings.lineTo(2,24);wings.closePath();
+ const wing=new THREE.Mesh(new THREE.ShapeGeometry(wings),geoFinish);wing.rotation.x=-Math.PI/2;wing.position.y=-.1;grp.add(wing);
+ geoBox(grp,9,.3,14,geoFinish,-11,1.6,0);geoBox(grp,4.5,5,.35,geoFinish,-13,3.1,0);
+ for(const z of [-8,8]){const engine=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,5,16),geoMetal);engine.rotation.z=Math.PI/2;engine.position.set(0,-2,z);grp.add(engine)}
+ for(let x=-12;x<13;x+=2){const win=geoBox(grp,.5,.18,.08,geoWindow,x,1.25,1.59);}
+ return grp;
+}
+// DXB: animated take-off, two clearly visible parked aircraft, terminal and gates.
+{
+ const sc=geoScene('airport',[55.3657,25.2532]);
+ const runway=geoBox(sc,240,.13,45,mat(0x303e4a),0,.07,0);
+ for(let x=-110;x<115;x+=17)geoBox(sc,8,.08,.7,roadWhite,x,.18,0);
+ for(const z of [-19,19])for(let x=-110;x<115;x+=10)geoBox(sc,.6,.16,.6,mat(0xeaf5ff),x,.18,z);
+ const terminalBuilding=geoBox(sc,92,13,22,mat(0x9db6c6,.6,.2),-20,6.5,69);
+ geoBox(sc,94,1.8,24,geoMetal,-20,14.2,69);
+ for(let x=-61;x<24;x+=9)geoBox(sc,6.5,7,.14,geoWindow,x,8.5,80.15);
+ const towerMesh=new THREE.Mesh(new THREE.CylinderGeometry(4.5,5,33,16),geoFinish);towerMesh.position.set(47,16,72);sc.add(towerMesh);
+ geoBox(sc,16,4,16,geoWindow,47,35,72);
+ const main=geoPlane(sc,-105,3,-3,.92),parkedA=geoPlane(sc,-46,3,46,.65),parkedB=geoPlane(sc,33,3,46,.65);
+ parkedA.rotation.y=.17;parkedB.rotation.y=.17;
+ geoVehicleState.airport={main};
+}
+function geoCar(parent,paint,x,z,direction=1){
+ const grp=new THREE.Group();grp.position.set(x,1.1,z);grp.rotation.y=direction<0?Math.PI:0;parent.add(grp);
+ geoBox(grp,4.8,1.1,2.0,mat(paint,.35,.24),0,.3,0);geoBox(grp,2.7,.85,1.72,geoWindow,-.3,1.2,0);
+ for(const ax of [-1.45,1.5])for(const az of [-1.02,1.02]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.26,12),mat(0x171b20));wheel.rotation.x=Math.PI/2;wheel.position.set(ax,-.22,az);grp.add(wheel)}
+ for(const az of [-.7,.7])geoBox(grp,.1,.18,.3,new THREE.MeshBasicMaterial({color:0xe4ffff}),2.42,.5,az);
+ return grp;
+}
+// Cars travel on a mapped city road instead of being hidden beneath the map.
+{
+ const sc=geoScene('road',[55.2678,25.1706]);
+ geoBox(sc,240,.1,33,mat(0x313b48),0,.03,0);
+ for(let x=-112;x<114;x+=13)for(const z of [-5.5,5.5])geoBox(sc,6,.05,.25,roadWhite,x,.11,z);
+ const vehicles=[];const colors=[0xf5f5f5,0x295c88,0xc6b4a2,0x48aeb5,0xced8e7,0xa1b7ce,0xd2a64d,0x355879,0xe5ecef];
+ for(let i=0;i<9;i++){
+  const direction=i%2===0?1:-1;const z=direction===1?-12+i%3*2.6:5.5+(i%3)*2.6;
+  const g=geoCar(sc,colors[i],-105+i*23,z,direction);vehicles.push({g,base:-105+i*23,speed:11+(i%4)*3,direction});
+ }
+ geoVehicleState.road={vehicles};
+}
+function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
+ const root=new THREE.Group();root.position.set(x,1.3,z);root.scale.setScalar(scale);sc.add(root);
+ const hull=geoBox(root,155,15,26,mat(color,.55,.25),0,5,0);geoBox(root,153,1.5,27,mat(0x233345),0,13,0);
+ const cm=[mat(0x418ed1),mat(0xd64e43),mat(0xf4ba4b),mat(0x3eabc2),mat(0xe1e8f0)];
+ for(let row=0;row<2;row++)for(let col=0;col<11;col++)for(let level=0;level<2;level++)geoBox(root,12.6,5.8,10.2,cm[(row+col+level)%cm.length],-60+col*12.2,17+level*6.3,(-1+row)*5.5);
+ geoBox(root,18,20,18,geoFinish,61,24,0);geoBox(root,14,7,16,geoWindow,62,37,0);return root;
+}
+// Jebel Ali: two moving ships, cargo stacks and full-height cranes.
+{
+ const sc=geoScene('port',[55.0600,24.9905]);
+ geoBox(sc,310,.5,70,mat(0x818f95,.9),0,0,72);
+ for(let j=0;j<9;j++)for(let k=0;k<3;k++)geoBox(sc,16,7,6,containerMats[(j+k)%containerMats.length],-120+j*30,4+k*7,72+(j%3)*12);
+ for(const x of [-90,20,122]){
+  geoBox(sc,2.5,65,2.5,geoMetal,x,32,43);geoBox(sc,2.5,65,2.5,geoMetal,x+31,32,43);
+  geoBox(sc,93,2.6,3,geoMetal,x+13,65,43);geoBox(sc,.4,45,.4,geoMetal,x+42,43,43);
+  geoBox(sc,13,8,7,containerMats[2],x+42,20,43);
+ }
+ const first=geoCargoShip(sc,-26,-42,0xa82e40,.85),second=geoCargoShip(sc,115,-110,0x225977,.55);
+ geoVehicleState.port={first,second};
+}
+// Place the SAME school geometry into the geographic 3D map near Academic City.
+// During the transition this matches the exterior shown by the independent classroom renderer.
+{
+ const sc=geoScene('schoolOutside',[55.40215,25.10773]);
+ const model=school.clone(true);model.position.set(0,0,0);model.rotation.y=.06;sc.add(model);
+}
+function animateMapVehicles(t){
+ if(geoVehicleState.airport){let p=(t*.046)%1,pl=geoVehicleState.airport.main;
+  pl.position.set(-105+p*210,3+Math.max(0,(p-.37))*58,-3);pl.rotation.z=-Math.max(0,Math.min(1,(p-.35)*2))*.14;}
+ if(geoVehicleState.road){for(const v of geoVehicleState.road.vehicles){const span=235,phase=(t*v.speed+v.base+110)%span;
+  v.g.position.x=v.direction>0?-115+phase:115-phase;}}
+ if(geoVehicleState.port){geoVehicleState.port.first.position.x=-26+Math.sin(t*.19)*16;
+  geoVehicleState.port.second.position.x=115+Math.sin(t*.14+1)*10;
+  geoVehicleState.port.first.rotation.z=.012*Math.sin(t*.7);}
+}
+function installMapModels(map){
+ if(map.getLayer('presentation-live-3d'))return;
+ const layer={id:'presentation-live-3d',type:'custom',renderingMode:'3d',
+ onAdd(mapInstance,gl){this.map=mapInstance;this.camera=new THREE.Camera();this.renderer=new THREE.WebGLRenderer({canvas:mapInstance.getCanvas(),context:gl,antialias:true});
+  this.renderer.autoClear=false;this.renderer.outputColorSpace=THREE.SRGBColorSpace;this.renderer.toneMapping=THREE.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.4;
+ },
+ render(gl,mapMatrix){
+  if(activeMode!=='map'||!mapReady)return;
+  const key=slides[index]?.shot;const m=geoModels[key];if(!m)return;
+  const base=maplibregl.MercatorCoordinate.fromLngLat(m.origin,0),scale=base.meterInMercatorCoordinateUnits();
+  const correction=new THREE.Matrix4().makeTranslation(base.x,base.y,base.z)
+   .multiply(new THREE.Matrix4().makeScale(scale,-scale,scale))
+   .multiply(new THREE.Matrix4().makeRotationX(Math.PI/2));
+  const raw=Array.isArray(mapMatrix)?mapMatrix:(mapMatrix?.defaultProjectionData?.mainMatrix||mapMatrix);
+  if(!raw||!Array.isArray(raw)&&!(raw instanceof Float32Array)&&!(raw instanceof Float64Array))return;
+  this.camera.projectionMatrix=new THREE.Matrix4().fromArray(raw).multiply(correction);
+  animateMapVehicles(performance.now()*.001);
+  this.renderer.resetState();this.renderer.render(m.scene,this.camera);
+  this.map.triggerRepaint();
+ },
+ onRemove(){this.renderer?.dispose()}
+ };
+ try{map.addLayer(layer);console.info('Live 3D map models installed: airport planes, road cars, port ships, school');}
+ catch(e){console.warn('3D map layer could not be installed',e)}
+}
+
 // Sky haze for photorealistic perspective depth
 canvasScene.fog=new THREE.FogExp2(0x22364d,.006);
 // Dubai camera fixed targets, transitioning through actual positions.
@@ -320,11 +484,22 @@ const dubaiPoses={
   airport:{pos:new THREE.Vector3(-80,11,46),look:new THREE.Vector3(-56,5,-12),fov:43},
   road:{pos:new THREE.Vector3(-138,5.5,35),look:new THREE.Vector3(-116,3,-26),fov:54},
   port:{pos:new THREE.Vector3(333,21,31),look:new THREE.Vector3(296,8,-21),fov:48},
-  schoolOutside:{pos:new THREE.Vector3(530,14,40),look:new THREE.Vector3(530,9,-20),fov:49},
+  schoolOutside:{pos:new THREE.Vector3(530,6.3,33),look:new THREE.Vector3(530,6.2,-17),fov:47},
   schoolInside:{pos:new THREE.Vector3(530,5,-22),look:new THREE.Vector3(530,7,-31),fov:62}
 };
 let dubaiGoal='skyline',movingSchool=false;
 function flashTransition(duration=680){const v=$('veil');v.classList.add('on');setTimeout(()=>v.classList.remove('on'),duration);}
+function flyThroughSchool(){
+ cameraTween=null;
+ const start=camera.position.clone();
+ // The camera approaches the REAL model facade at world z≈-7, then enters
+ // through its transparent glass frontage and proceeds to the actual board.
+ const curve=new THREE.CatmullRomCurve3([start,
+  new THREE.Vector3(530,5.0,24),new THREE.Vector3(530,4.65,8),
+  new THREE.Vector3(530,4.65,-6),new THREE.Vector3(530,5.4,-14),
+  dubaiPoses.schoolInside.pos.clone()],false,'catmullrom',.25);
+ cameraPath={curve,start:performance.now(),duration:5100};
+}
 function switchMode(mode){
  if(activeMode===mode)return;
  activeMode=mode;
@@ -379,21 +554,25 @@ function setText(s){
  $('chapterText').textContent=chapterNames[s.chapter]||'';document.querySelectorAll('#chapter .lines i').forEach((el,j)=>el.classList.toggle('active',j<s.chapter));
 }
 function gotoSlide(i){
- navigationVersion++;routeGroup.clear();activeRoute=null;activeTrail=null;
+ navigationVersion++;routeGroup.clear();activeRoute=null;activeTrail=null;cameraPath=null;
  index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);
  // Load the geographic Dubai map while Topic 2 is on screen, so the first flight isn't blank.
  if(s.chapter===2&&!realMap&&!mapBroken)prepareMap();
- if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');setDotMode('off');return}
+ if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');setParticleMode('off');return}
  if(s.chapter===2 && s.kind!=='dubai'){
-  switchMode('globe');network.visible=false;earthHolder.visible=false;targetMarker.visible=false;setDotMode(s.dot||'sphere');
+  switchMode('globe');network.visible=false;earthHolder.visible=false;targetMarker.visible=false;setParticleMode(s.dot||'sphere');
   tweenCamera(globeBase,1800);return;
- } else { setDotMode('off'); }
+ } else { setParticleMode('off'); }
  if(s.kind==='dubai'){
   network.visible=false;targetMarker.visible=false;
   if(s.shot==='schoolInside'){
-   switchMode('dubai');
-   // Fly through the real model's glass entrance into a furnished 3D room.
-   tweenCamera(dubaiPoses.schoolInside,3700);return;
+   if(activeMode==='map'){
+    const token=navigationVersion;flashTransition(700);
+    setTimeout(()=>{if(navigationVersion!==token)return;switchMode('dubai');
+      camera.position.set(530,6.2,40);cameraTarget.set(530,6,-12);camera.lookAt(cameraTarget);
+      flyThroughSchool();},280);
+   }else {switchMode('dubai');flyThroughSchool();}
+   return;
   }
   if(s.shot==='schoolOutside'){
    prepareMap();
@@ -404,13 +583,14 @@ function gotoSlide(i){
     // to the detailed custom DISD facade so that we can fly through its door.
     setTimeout(()=>{
      if(navigationVersion!==token)return;
-     flashTransition(900);
+     flashTransition(870);
      setTimeout(()=>{
        if(navigationVersion!==token)return;
        switchMode('dubai');
-       camera.position.set(530,17,62);cameraTarget.set(530,8,8);camera.lookAt(cameraTarget);
-       tweenCamera(dubaiPoses.schoolOutside,2600);
-     },260);
+       // Same 3D geometry as the school already rendered on the geographic map.
+       camera.position.set(530,8.3,52);cameraTarget.set(530,6,-10);camera.lookAt(cameraTarget);
+       tweenCamera(dubaiPoses.schoolOutside,2400);
+     },320);
     },3250);
    }else{switchMode('dubai');tweenCamera(dubaiPoses.schoolOutside,3200)}
    return;
@@ -420,7 +600,7 @@ function gotoSlide(i){
   else{switchMode('dubai');tweenCamera(dubaiPoses[s.shot],3100)}
   return;
  }
- switchMode('globe');network.visible=true;earthHolder.visible=true; setDotMode('off');
+ switchMode('globe');network.visible=true;earthHolder.visible=true; setParticleMode('off');
  markPlace(s.kind==='place'?s.place:null);
  if(s.kind==='place'){
   if(s.from)travel(s.from,s.place);else tweenCamera(camGlobe(s.place),3100);
@@ -439,7 +619,7 @@ let touchX=0,touchY=0;document.addEventListener('touchstart',e=>{touchX=e.change
 camera.position.copy(globeBase.pos);cameraTarget.copy(globeBase.look);camera.lookAt(cameraTarget);switchMode('none');setText(slides[0]);
 function render(now){requestAnimationFrame(render);const dt=clock.getDelta();frameCamera(now);if(started){$('count').textContent=fmt(((now-startTime)/1000)*29000)}
  if(activeMode==='globe' && !cameraTween && index<=3){earthHolder.rotation.y+=dt*.09}else if(activeMode==='globe' && index===20){earthHolder.rotation.y+=dt*.045}
- updateDots(dt,now*.001);
+ drawParticles(now);
  if(activeMode==='dubai'){
   const elapsed=now*.001;
   airplane.position.set(-69+(Math.sin(elapsed*.19)+1)*5,9+Math.sin(elapsed*.31)*.9,-2);airplane.rotation.y=.08;

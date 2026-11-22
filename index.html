@@ -22,33 +22,33 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 #fact{position:absolute;top:36%;right:6.5%;width:min(30vw,430px);padding:24px 25px;border:1px solid rgba(125,220,255,.34);border-radius:21px;background:linear-gradient(140deg,rgba(6,22,40,.92),rgba(7,15,27,.89));backdrop-filter:blur(14px);box-shadow:0 18px 55px #0006;opacity:0;transform:translateX(22px);transition:opacity .55s,transform .6s}
 #fact.show{opacity:1;transform:none}#fact .meta{font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:#79d3ff;margin-bottom:12px}#fact h2{font-size:clamp(23px,2.6vw,39px);line-height:1.1;letter-spacing:-.035em;margin:0 0 10px}#fact p{color:#bbd2e8;font-size:clamp(13px,1.25vw,17px);line-height:1.5;margin:0}
 #chapter{position:absolute;left:29px;bottom:27px;display:flex;align-items:center;gap:15px;opacity:0;transition:opacity .6s}#chapter.show{opacity:1}#chapter .lines{display:flex;gap:5px}#chapter .lines i{width:27px;height:3px;border-radius:3px;background:#324762}#chapter .lines i.active{background:#75d9ff;box-shadow:0 0 10px #75d9ff}#chapter span{font-size:11px;letter-spacing:.13em;color:#a8bcd5}
-#moment{position:absolute;right:30px;bottom:28px;font-size:11px;letter-spacing:.12em;color:#a8bad0;opacity:0}#moment.show{opacity:1}
 #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:9%;font-size:13px;color:#a4bdd9;letter-spacing:.19em;text-transform:uppercase;animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.4}}
-#notes,#sources{position:absolute;z-index:10;padding:19px 21px;border-radius:16px;background:#061322f2;border:1px solid #68c7ef64;color:#d7e5f4;font-size:14px;line-height:1.55;pointer-events:auto;display:none}#notes{right:25px;bottom:72px;max-width:400px}#sources{left:25px;top:67px;max-width:500px}#notes.visible,#sources.visible{display:block}#sources a{color:#a4e6ff}
+#sources{position:absolute;z-index:10;padding:19px 21px;border-radius:16px;background:#061322f2;border:1px solid #68c7ef64;color:#d7e5f4;font-size:14px;line-height:1.55;pointer-events:auto;display:none;left:25px;top:67px;max-width:500px}#sources.visible{display:block}#sources a{color:#a4e6ff}
+#veil{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%, rgba(214,240,255,.14), rgba(0,0,0,0) 38%, rgba(0,0,0,.86) 100%), linear-gradient(180deg,rgba(3,10,18,0),rgba(3,10,18,.92));opacity:0;transition:opacity .65s ease;z-index:9}#veil.on{opacity:1}
 #overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#020710df;pointer-events:none;text-align:center;padding:20px}#overlay.visible{display:flex}#overlay strong{font-size:clamp(20px,3vw,36px)}
 @media(max-width:850px){#headline{width:min(54vw,600px)}#fact{right:5%;width:34vw;padding:18px}#headline h1{font-size:clamp(28px,4.3vw,55px)}#headline p{font-size:clamp(13px,1.45vw,18px)}}
-@media(max-width:680px){#headline{left:6%;bottom:14%;width:88vw}#fact{left:6%;right:auto;top:23%;width:80vw;padding:16px}#headline h1{font-size:clamp(30px,8vw,45px)}#headline p{font-size:14px}.chrome{font-size:9px;left:14px;top:15px}#countWrap.corner{right:13px;top:43px}#countWrap.corner .caption{display:none}#chapter{left:13px;bottom:15px}#chapter span{font-size:9px}#moment{right:13px;bottom:15px}}
+@media(max-width:680px){#headline{left:6%;bottom:14%;width:88vw}#fact{left:6%;right:auto;top:23%;width:80vw;padding:16px}#headline h1{font-size:clamp(30px,8vw,45px)}#headline p{font-size:14px}.chrome{font-size:9px;left:14px;top:15px}#countWrap.corner{right:13px;top:43px}#countWrap.corner .caption{display:none}#chapter{left:13px;bottom:15px}#chapter span{font-size:9px}}
 </style>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 </head>
 <body>
 <div id="world"></div><div id="geoMap" aria-label="3D map of Dubai based on OpenStreetMap"></div><div id="vignette"></div>
-<div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>N</b> NOTES · <b>S</b> SOURCES · <b>F</b> FULLSCREEN</div>
+<div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>S</b> SOURCES · <b>F</b> FULLSCREEN</div>
 <div id="countWrap"><div class="question">HOW MANY MESSAGES ARE SENT TO AI?</div><div class="digits" id="count">0</div><div class="caption">Estimated ChatGPT messages · 29,000 / second (2025 reference)</div></div>
 <div id="headline"><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p id="subtitle"></p></div>
 <div id="fact"><div class="meta" id="factMeta"></div><h2 id="factTitle"></h2><p id="factBody"></p></div>
 <div id="hint">SWIPE OR TAP TO BEGIN</div>
-<div id="chapter"><div class="lines"><i></i><i></i><i></i><i></i></div><span id="chapterText"></span></div><div id="moment"></div>
-<div id="notes"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. The close-up school exterior and classroom are illustrative 3D models.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
+<div id="chapter"><div class="lines"><i></i><i></i><i></i><i></i></div><span id="chapterText"></span></div>
+<div id="veil"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. The close-up school exterior and classroom are illustrative 3D models.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
 <div id="overlay"><strong>3D graphics unavailable on this device.<br>Try Safari or Chrome with WebGL enabled.</strong></div>
 </div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 const $=x=>document.getElementById(x), lerp=THREE.MathUtils.lerp, clamp=THREE.MathUtils.clamp;
-const world=$('world'), counter=$('countWrap'), headline=$('headline'), fact=$('fact'), chapter=$('chapter'), moment=$('moment');
+const world=$('world'), counter=$('countWrap'), headline=$('headline'), fact=$('fact'), chapter=$('chapter');
 const fmt=n=>Math.floor(n).toLocaleString('en-US');
-let index=0, startTime=0, started=false, notesOn=false, sourcesOn=false, moving=false;
+let index=0, startTime=0, started=false, sourcesOn=false, moving=false;
 let navigationVersion=0;
 const canvasScene=new THREE.Scene(); canvasScene.background=new THREE.Color('#030b18');
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -161,6 +161,29 @@ function travel(from,to){
  });
 }
 
+
+// Topic 2 living dots background
+const dotsGroup=new THREE.Group();canvasScene.add(dotsGroup);dotsGroup.visible=false;
+const DOT_COUNT=1800;const dotPositions=new Float32Array(DOT_COUNT*3);const baseSphere=[];const tempTargets={};
+function randOnSphere(r=1){const u=Math.random()*2-1,t=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u);return [Math.cos(t)*s*r,u*r,Math.sin(t)*s*r]}
+for(let i=0;i<DOT_COUNT;i++){const [x,y,z]=randOnSphere(18+Math.random()*6);baseSphere.push([x,y,z]);dotPositions[i*3]=x;dotPositions[i*3+1]=y;dotPositions[i*3+2]=z;}
+const dotGeo=new THREE.BufferGeometry();dotGeo.setAttribute('position',new THREE.BufferAttribute(dotPositions,3));
+const dotMat=new THREE.PointsMaterial({color:0x9fe9ff,size:.22,transparent:true,opacity:.95,sizeAttenuation:true});
+const dotPoints=new THREE.Points(dotGeo,dotMat);dotsGroup.add(dotPoints);
+const dotCore=new THREE.Mesh(new THREE.IcosahedronGeometry(1.8,1),new THREE.MeshBasicMaterial({color:0x65c9ff,transparent:true,opacity:.15,wireframe:true}));dotsGroup.add(dotCore);
+let dotMode='sphere';
+function buildDotTargets(){
+ tempTargets.sphere=baseSphere.map(p=>p.slice());
+ tempTargets.translation=baseSphere.map((p,i)=>{const a=(i/DOT_COUNT)*Math.PI*2*10;const r=5+3*Math.sin(i*.09);return [Math.cos(a)*r, (i/DOT_COUNT-.5)*18, Math.sin(a)*r];});
+ tempTargets.trade=baseSphere.map((p,i)=>{const cols=60; const row=Math.floor(i/cols), col=i%cols; return [col*0.28-8.2, ((row%26)-13)*0.46, Math.sin(col*.6+row*.3)*1.4];});
+ tempTargets.jobs=baseSphere.map((p,i)=>{const side=i<DOT_COUNT/2?-1:1; const j=i%(DOT_COUNT/2); return [side*(5+((j%30)*0.18)), (((j/30)|0)-15)*0.45, Math.sin(j*.4)*1.8];});
+ tempTargets.divide=baseSphere.map((p,i)=>{const side=i<DOT_COUNT*.72?-1:1; return [side*(4+Math.random()*7), (Math.random()-.5)*16, (Math.random()-.5)*10];});
+ tempTargets.summary=baseSphere.map((p,i)=>{const a=(i/DOT_COUNT)*Math.PI*2*12; const r=8+2*Math.sin(i*.14); return [Math.cos(a)*r, Math.sin(a*.5)*5, Math.sin(a)*r*.75];});
+}
+buildDotTargets();
+function setDotMode(mode){dotMode=mode;dotsGroup.visible=true; if(mode==='off') dotsGroup.visible=false;}
+function updateDots(dt,t){if(!dotsGroup.visible)return;const arr=dotGeo.attributes.position.array; const target=tempTargets[dotMode]||tempTargets.sphere; for(let i=0;i<DOT_COUNT;i++){const ii=i*3, tp=target[i]; arr[ii]=lerp(arr[ii],tp[0],0.045); arr[ii+1]=lerp(arr[ii+1],tp[1],0.045); arr[ii+2]=lerp(arr[ii+2],tp[2],0.045);} dotGeo.attributes.position.needsUpdate=true; dotsGroup.rotation.y+=dt*(dotMode==='sphere'?0.14:0.08); dotsGroup.rotation.x=lerp(dotsGroup.rotation.x, dotMode==='translation' ? .4 : (dotMode==='jobs' ? -.15 : .08), .05); dotCore.rotation.x+=dt*.25; dotCore.rotation.y+=dt*.34; dotCore.visible=dotMode==='translation';
+ if(dotMode==='trade'){dotsGroup.position.set(12,5,-8);} else if(dotMode==='jobs'){dotsGroup.position.set(8,6,-6);} else if(dotMode==='divide'){dotsGroup.position.set(10,5,-4);} else if(dotMode==='summary'){dotsGroup.position.set(9,4,-8);} else if(dotMode==='translation'){dotsGroup.position.set(6,5,-8);} else {dotsGroup.position.set(0,0,0);} }
 // 3D Dubai environment. Buildings, airport, highway, ship, cranes, school exterior and interior
 // are geometric objects in real perspective, not flat SVGs.
 function mat(color,roughness=.7,metalness=.15){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
@@ -197,6 +220,10 @@ const nose=new THREE.Mesh(new THREE.ConeGeometry(1.05,3,20),mat(0xf4f9ff,.4,.3))
 const tail=new THREE.Mesh(new THREE.ConeGeometry(.9,2.2,16),mat(0xdce9f6));tail.rotation.z=Math.PI/2;tail.position.x=-8;airplane.add(tail);
 box(8,.25,17,mat(0xe9f2ff,.4,.25),.2,.05,0,airplane);box(3,.28,7,mat(0xe9f2ff,.4,.25),-6,.4,0,airplane);box(2.2,4.2,.25,mat(0xe8eff9,.5,.2),-6.7,2,0,airplane);
 for(let z of [-4.7,4.7]){const eng=cyl(.8,.8,2.5,steel,0,-1,z,airplane);eng.rotation.z=Math.PI/2}
+// Extra parked / taxiing aircraft to make the airport feel busier
+const parkedPlanes=[];
+function parkedPlane(x,z,rot=0){const pg=new THREE.Group();pg.position.set(x,1.8,z);pg.rotation.y=rot;dubaiWorld.add(pg);const f=new THREE.Mesh(new THREE.CylinderGeometry(.65,.72,8,16),mat(0xf3f7fc,.45,.3));f.rotation.z=Math.PI/2;pg.add(f);const n=new THREE.Mesh(new THREE.ConeGeometry(.65,1.8,16),mat(0xf4f9ff,.4,.3));n.rotation.z=-Math.PI/2;n.position.x=4.9;pg.add(n);box(4.8,.16,10.4,mat(0xe9f2ff,.4,.25),.15,.05,0,pg); parkedPlanes.push(pg);}
+parkedPlane(-49,-2,.18); parkedPlane(-38,-7,.08);
 // Highway from airport towards skyline: perspective actual mesh and individual moving cars
 box(113,.1,11,asphalt,-25,.02,12);for(let x=-83;x<33;x+=7)for(const z of [9.5,14.5])box(3,.025,.08,roadWhite,x,.09,z);
 for(let x=-84;x<35;x+=13){cyl(.075,.075,4,steel,x,2.1,6.4);box(.16,.16,2,nightLight,x,4.12,7.2);}
@@ -218,6 +245,8 @@ const ship=new THREE.Group();ship.position.set(56,.7,5);portWorld.add(ship);
 const hull=box(42,5,12,mat(0x9c2536,.48,.3),0,0,0,ship);hull.scale.set(1,1,1);box(41,.45,11.8,mat(0x20293a),0,2.6,0,ship);
 for(let i=0;i<6;i++)for(let k=0;k<2;k++){box(5,2.8,5.2,containerMats[(i+k)%containerMats.length],-15+i*5.6,4.2+k*2.8,-2.9+(k%2)*5.6,ship)}
 box(6,7,8,mat(0xe5e9ef),15.5,6.5,0,ship);box(.4,7,.4,steel,16,12,0,ship);
+// A second ship adds life to the port
+const ship2=new THREE.Group();ship2.position.set(84,.55,-6);portWorld.add(ship2);box(28,3.8,9,mat(0x24496e,.5,.3),0,0,0,ship2);box(7,5,7,mat(0xe5e9ef),9,4.4,0,ship2);
 // School exterior to indoor classroom: fully geometrical coherent room
 const school=new THREE.Group();school.position.set(530,0,-20);dubaiWorld.add(school);
 // Walls are hollow; no solid box blocks the camera entering the classroom.
@@ -233,7 +262,7 @@ box(.25,12.5,24,mat(0xe0dbd2),-15,6.25,0,school);box(.25,12.5,24,mat(0xe0dbd2),1
 box(30,12.5,.25,mat(0xe0dbd2),0,6.25,-12,school);
 // large board
 box(14,7,.3,mat(0x143046,.28,.2),0,7.3,-11.7,school);box(14.2,.15,.35,steel,0,3.75,-11.65,school);
-const boardCanvas=document.createElement('canvas');boardCanvas.width=1024;boardCanvas.height=512;const bc=boardCanvas.getContext('2d');bc.fillStyle='#0e263d';bc.fillRect(0,0,1024,512);bc.fillStyle='#d7f4ff';bc.font='bold 110px Arial';bc.textAlign='center';bc.fillText('AI LITERACY',512,270);bc.fillStyle='#86d8ff';bc.font='46px Arial';bc.fillText('Learn • Think • Create',512,360);const boardTex=new THREE.CanvasTexture(boardCanvas);const boardScreen=new THREE.Mesh(new THREE.PlaneGeometry(13.4,6.5),new THREE.MeshBasicMaterial({map:boardTex}));boardScreen.position.set(0,7.3,-11.46);school.add(boardScreen);
+const boardCanvas=document.createElement('canvas');boardCanvas.width=1024;boardCanvas.height=512;const bc=boardCanvas.getContext('2d');bc.fillStyle='#0e263d';bc.fillRect(0,0,1024,512);bc.fillStyle='#d7f4ff';bc.font='bold 110px Arial';bc.textAlign='center';bc.fillText('AI',512,240);bc.fillStyle='#86d8ff';bc.font='52px Arial';bc.fillText('Think globally, Act locally',512,345);const boardTex=new THREE.CanvasTexture(boardCanvas);const boardScreen=new THREE.Mesh(new THREE.PlaneGeometry(13.4,6.5),new THREE.MeshBasicMaterial({map:boardTex}));boardScreen.position.set(0,7.3,-11.46);school.add(boardScreen);
 for(let row=0;row<3;row++)for(let col=0;col<4;col++){
  const x=-10.5+col*7,z=-4+row*5.4;
  box(5.2,.35,2.7,wood,x,2.9,z,school);for(let dx of [-2.2,2.2])for(let dz of [-1,1])box(.16,2.7,.16,steel,x+dx,1.4,z+dz,school);
@@ -295,6 +324,7 @@ const dubaiPoses={
   schoolInside:{pos:new THREE.Vector3(530,5,-22),look:new THREE.Vector3(530,7,-31),fov:62}
 };
 let dubaiGoal='skyline',movingSchool=false;
+function flashTransition(duration=680){const v=$('veil');v.classList.add('on');setTimeout(()=>v.classList.remove('on'),duration);}
 function switchMode(mode){
  if(activeMode===mode)return;
  activeMode=mode;
@@ -317,12 +347,12 @@ const slides=[
  {kind:'place',chapter:1,from:'California',place:'Netherlands',headline:['STOP 2 • THE NETHERLANDS','The machines behind chips.','ASML makes advanced lithography equipment needed to manufacture leading-edge chips.'],fact:['VELDHOVEN','Netherlands','Precision manufacturing equipment'],note:'Watch the glowing path draw from California to the Netherlands, then the camera flies there.'},
  {kind:'place',chapter:1,from:'Netherlands',place:'Taiwan',headline:['STOP 3 • TAIWAN','From design to silicon.','TSMC manufactures many of the world’s most advanced AI chips.'],fact:['TAIWAN','Hsinchu and Tainan','Semiconductor manufacturing'],note:'The camera follows the path across Earth to Taiwan.'},
  {kind:'place',chapter:1,from:'Taiwan',place:'Malaysia',headline:['STOP 4 • MALAYSIA','Cloud power for AI.','Johor is developing data-centre capacity that supports regional cloud computing and AI.'],fact:['JOHOR, MALAYSIA','Regional data-centre hub','One of many places providing global computing capacity'],note:'The camera flies to Johor in Malaysia. It is one representative compute hub, not the home of all AI computing.'},
- {kind:'globe',chapter:2,headline:['02 / OPPORTUNITIES AND RISKS','AI connects. AI disrupts.','The same technology creates opportunities and serious challenges.'],note:'Transition from how AI is built to how it affects globalisation.'},
- {kind:'translation',chapter:2,headline:['ADVANTAGE • COMMUNICATION','Different languages. One conversation.','AI translates between Tokyo and Dubai in seconds.'],note:'Give an example of global communication; this is a conceptual demonstration.'},
- {kind:'globe',chapter:2,headline:['ADVANTAGE • TRADE','Smarter global logistics.','AI helps businesses predict demand and coordinate products across borders.'],note:'Mention logistics, demand prediction and research collaboration.'},
- {kind:'globe',chapter:2,headline:['CHALLENGE • JOBS','Work is changing.','Routine tasks can be automated, so training and new skills matter.'],note:'Explain how automation may disrupt some jobs.'},
- {kind:'globe',chapter:2,headline:['CHALLENGE • AI DIVIDE','Not everyone can access AI.','Infrastructure, computing and education remain unevenly distributed.'],note:'Explain unequal access across the world.'},
- {kind:'summary',chapter:2,note:'Summarise: better communication and science, but unequal access, privacy concerns and changing jobs.'},
+ {kind:'dots',dot:'sphere',chapter:2,headline:['02 / OPPORTUNITIES AND RISKS','AI connects. AI disrupts.','The same technology creates opportunities and serious challenges.'],note:'Transition from how AI is built to how it affects globalisation.'},
+ {kind:'translation',dot:'translation',chapter:2,headline:['ADVANTAGE • COMMUNICATION','Different languages. One conversation.','AI translates between Tokyo and Dubai in seconds.'],note:'Give an example of global communication; this is a conceptual demonstration.'},
+ {kind:'dots',dot:'trade',chapter:2,headline:['ADVANTAGE • TRADE','Smarter global logistics.','AI helps businesses predict demand and coordinate products across borders.'],note:'Mention logistics, demand prediction and research collaboration.'},
+ {kind:'dots',dot:'jobs',chapter:2,headline:['CHALLENGE • JOBS','Work is changing.','Routine tasks can be automated, so training and new skills matter.'],note:'Explain how automation may disrupt some jobs.'},
+ {kind:'dots',dot:'divide',chapter:2,headline:['CHALLENGE • AI DIVIDE','Not everyone can access AI.','Infrastructure, computing and education remain unevenly distributed.'],note:'Explain unequal access across the world.'},
+ {kind:'summary',dot:'summary',chapter:2,note:'Summarise: better communication and science, but unequal access, privacy concerns and changing jobs.'},
  {kind:'dubai',chapter:3,shot:'skyline',headline:['03 / AI IN DUBAI','Now, back to Dubai.','We’ll travel from the airport, through the city, to the port.'],note:'MapLibre uses real geographic Dubai street maps and available 3D OSM buildings; not photorealistic satellite imagery.'},
  {kind:'dubai',chapter:3,shot:'airport',headline:['DUBAI STOP 1 • DXB','Connecting travellers.','Smart airport systems help Dubai connect people from around the world.'],fact:['AVIATION','Dubai International Airport','Smart Gates use biometric identity checks; not all smart systems are necessarily AI.'],note:'Camera flies into an airport scene with a 3D plane, runway and terminal.'},
  {kind:'dubai',chapter:3,shot:'road',headline:['DUBAI STOP 2 • CITY STREETS','Following the roads.','The camera follows real streets through Dubai while AI-assisted traffic tools help manage journeys.'],fact:['TRANSPORT','Dubai streets','Traffic analysis and urban mobility technology'],note:'Follow the real road network in Dubai; this section is not labelled Mirdif.'},
@@ -345,16 +375,19 @@ function setText(s){
  }
  if(s.kind==='end'){headline.classList.remove('show');fact.classList.remove('show')}
  counter.classList.toggle('show',index>0);counter.classList.toggle('corner',index>1&&s.kind!=='end');counter.classList.toggle('final',s.kind==='end');
- $('hint').style.display=index===0?'block':'none';chapter.classList.toggle('show',s.chapter>0&&s.kind!=='end');moment.classList.toggle('show',s.chapter>0);
- $('chapterText').textContent=chapterNames[s.chapter]||'';document.querySelectorAll('#chapter .lines i').forEach((el,j)=>el.classList.toggle('active',j<s.chapter));moment.textContent=`MOMENT ${String(index+1).padStart(2,'0')} / ${slides.length}`;
- $('notes').textContent=s.note||'';$('notes').classList.toggle('visible',notesOn);
+ $('hint').style.display=index===0?'block':'none';chapter.classList.toggle('show',s.chapter>0&&s.kind!=='end');
+ $('chapterText').textContent=chapterNames[s.chapter]||'';document.querySelectorAll('#chapter .lines i').forEach((el,j)=>el.classList.toggle('active',j<s.chapter));
 }
 function gotoSlide(i){
  navigationVersion++;routeGroup.clear();activeRoute=null;activeTrail=null;
  index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);
  // Load the geographic Dubai map while Topic 2 is on screen, so the first flight isn't blank.
  if(s.chapter===2&&!realMap&&!mapBroken)prepareMap();
- if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');return}
+ if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');setDotMode('off');return}
+ if(s.chapter===2 && s.kind!=='dubai'){
+  switchMode('globe');network.visible=false;earthHolder.visible=false;targetMarker.visible=false;setDotMode(s.dot||'sphere');
+  tweenCamera(globeBase,1800);return;
+ } else { setDotMode('off'); }
  if(s.kind==='dubai'){
   network.visible=false;targetMarker.visible=false;
   if(s.shot==='schoolInside'){
@@ -371,10 +404,14 @@ function gotoSlide(i){
     // to the detailed custom DISD facade so that we can fly through its door.
     setTimeout(()=>{
      if(navigationVersion!==token)return;
-     switchMode('dubai');
-     camera.position.set(530,27,104);cameraTarget.set(530,9,-20);camera.lookAt(cameraTarget);
-     tweenCamera(dubaiPoses.schoolOutside,2300);
-    },3400);
+     flashTransition(900);
+     setTimeout(()=>{
+       if(navigationVersion!==token)return;
+       switchMode('dubai');
+       camera.position.set(530,17,62);cameraTarget.set(530,8,8);camera.lookAt(cameraTarget);
+       tweenCamera(dubaiPoses.schoolOutside,2600);
+     },260);
+    },3250);
    }else{switchMode('dubai');tweenCamera(dubaiPoses.schoolOutside,3200)}
    return;
   }
@@ -383,12 +420,12 @@ function gotoSlide(i){
   else{switchMode('dubai');tweenCamera(dubaiPoses[s.shot],3100)}
   return;
  }
- switchMode('globe');network.visible=true;earthHolder.visible=true;
+ switchMode('globe');network.visible=true;earthHolder.visible=true; setDotMode('off');
  markPlace(s.kind==='place'?s.place:null);
  if(s.kind==='place'){
   if(s.from)travel(s.from,s.place);else tweenCamera(camGlobe(s.place),3100);
  }else{
-  if(s.kind==='globe'||s.kind==='network'||s.kind==='translation'||s.kind==='summary'){
+  if(s.kind==='globe'||s.kind==='network'){
    tweenCamera(globeBase,2800);
   }
  }
@@ -396,19 +433,20 @@ function gotoSlide(i){
 function next(){if(sourcesOn)return;if(index===0&&!started){started=true;startTime=performance.now();}if(index<slides.length-1)gotoSlide(index+1)}
 function prev(){if(sourcesOn)return;if(index>0)gotoSlide(index-1)}
 function toggleSources(){sourcesOn=!sourcesOn;$('sources').classList.toggle('visible',sourcesOn)}
-document.addEventListener('keydown',e=>{if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();next()}else if(e.key==='ArrowLeft'){e.preventDefault();prev()}else if(e.key.toLowerCase()==='n'){notesOn=!notesOn;setText(slides[index])}else if(e.key.toLowerCase()==='s')toggleSources();else if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}});
+document.addEventListener('keydown',e=>{if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();next()}else if(e.key==='ArrowLeft'){e.preventDefault();prev()}else if(e.key.toLowerCase()==='s')toggleSources();else if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}});
 let touchX=0,touchY=0;document.addEventListener('touchstart',e=>{touchX=e.changedTouches[0].clientX;touchY=e.changedTouches[0].clientY},{passive:true});document.addEventListener('touchend',e=>{if(sourcesOn)return;const dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))dx<0?next():prev();else if(Math.abs(dx)<16&&Math.abs(dy)<16)next()},{passive:true});document.addEventListener('click',e=>{if(e.target.closest('#sources'))return;if(!('ontouchstart'in window))next()});
 
 camera.position.copy(globeBase.pos);cameraTarget.copy(globeBase.look);camera.lookAt(cameraTarget);switchMode('none');setText(slides[0]);
 function render(now){requestAnimationFrame(render);const dt=clock.getDelta();frameCamera(now);if(started){$('count').textContent=fmt(((now-startTime)/1000)*29000)}
  if(activeMode==='globe' && !cameraTween && index<=3){earthHolder.rotation.y+=dt*.09}else if(activeMode==='globe' && index===20){earthHolder.rotation.y+=dt*.045}
+ updateDots(dt,now*.001);
  if(activeMode==='dubai'){
   const elapsed=now*.001;
-  // A real reference photo anchors the school exterior; fade into the modelled 3D room.
-  // No floating exterior photo: the campus is fully modelled when the camera enters it.
   airplane.position.set(-69+(Math.sin(elapsed*.19)+1)*5,9+Math.sin(elapsed*.31)*.9,-2);airplane.rotation.y=.08;
+  parkedPlanes.forEach((p,i)=>{p.position.x += Math.sin(elapsed*.25+i)*.01;});
   for(let c of cars){c.grp.position.x+=dt*c.speed*c.dir;if(c.grp.position.x>35)c.grp.position.x=-85;if(c.grp.position.x<-85)c.grp.position.x=35;}
   ship.position.x=56+Math.sin(elapsed*.23)*2.3;ship.rotation.z=Math.sin(elapsed*.36)*.01;
+  ship2.position.x=84+Math.sin(elapsed*.19+1.1)*1.4;
  }
  renderer.render(canvasScene,camera);
 }

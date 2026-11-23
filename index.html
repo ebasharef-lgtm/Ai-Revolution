@@ -62,13 +62,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 @media(max-width:850px){#headline{width:min(54vw,600px)}#fact{right:5%;width:34vw;padding:18px}#headline h1{font-size:clamp(28px,4.3vw,55px)}#headline p{font-size:clamp(13px,1.45vw,18px)}}
 @media(max-width:680px){#headline{left:6%;bottom:14%;width:88vw}#fact{left:6%;right:auto;top:23%;width:80vw;padding:16px}#headline h1{font-size:clamp(30px,8vw,45px)}#headline p{font-size:14px}.chrome{font-size:9px;left:14px;top:15px}#countWrap.corner{right:13px;top:43px}#countWrap.corner .caption{display:none}#chapter{left:13px;bottom:15px}#chapter span{font-size:9px}}
 
-/* The navigation controls are an accessible fallback when iOS cancels gestures
-   or the WebGL map is rendering heavily. They are deliberately outside the map. */
-#navBtns{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:9px;z-index:28;pointer-events:auto}
-#navBtns button{width:48px;height:48px;display:grid;place-items:center;border:1px solid rgba(139,213,255,.44);border-radius:15px;background:rgba(5,18,36,.86);color:#d8f5ff;font-size:26px;line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(10px)}
-#navBtns button:disabled{opacity:.3}
-@media(max-width:680px){#navBtns{right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom))}#navBtns button{width:43px;height:43px}}
-
 /* Applied last so the finale is not overwritten by the generic counter styles. */
 #countWrap.final{top:44%;left:5.5%;right:auto;transform:translateY(-50%);width:min(49vw,680px);text-align:left;z-index:6}
 #countWrap.final .question{font-size:clamp(15px,1.75vw,26px);white-space:normal;line-height:1.3}
@@ -80,14 +73,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 </head>
 <body>
 <div id="world"></div><div id="geoMap" aria-label="3D map of Dubai based on OpenStreetMap"></div><canvas id="particleCanvas" aria-hidden="true"></canvas><div id="vignette"></div>
-<div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>S</b> SOURCES · <b>F</b> FULLSCREEN</div>
-<div id="countWrap"><div class="question">HOW MANY MESSAGES ARE SENT TO AI?</div><div class="digits" id="count">0</div><div class="caption">Estimated ChatGPT messages · 29,000 / second (2025 reference)</div></div>
+<div id="ui"><div class="chrome"><b>← →</b> NAVIGATE · <b>S</b> SOURCES · <b>T</b> TIMER · <b>F</b> FULLSCREEN</div>
+<div id="countWrap"><div class="question">HOW MANY MESSAGES ARE SENT TO AI?</div><div class="digits" id="count">0</div><div class="caption">Estimated ChatGPT messages · 29,000 / second</div></div>
 <div id="headline"><div class="eyebrow" id="eyebrow"></div><h1 id="title"></h1><p id="subtitle"></p></div>
 <div id="kineticScene" aria-live="polite"></div>
 <div id="fact"><div class="meta" id="factMeta"></div><h2 id="factTitle"></h2><p id="factBody"></p></div>
 <div id="hint">SWIPE OR TAP TO BEGIN</div>
 <div id="chapter"><div class="lines"><i></i><i></i><i></i><i></i></div><span id="chapterText"></span></div>
-<div id="navBtns" aria-label="Presentation navigation"><button id="navBack" aria-label="Previous slide" type="button">&#8592;</button><button id="navNext" aria-label="Next slide" type="button">&#8594;</button></div><div id="veil"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. Dubai's airport, port, school and moving vehicles are illustrative 3D models aligned with mapped locations, not exact digital twins.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
+<div id="veil"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. Dubai's airport, port, school and moving vehicles are illustrative 3D models aligned with mapped locations, not exact digital twins.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
 <div id="overlay"><strong>3D graphics unavailable on this device.<br>Try Safari or Chrome with WebGL enabled.</strong></div>
 </div>
 <script>
@@ -102,18 +95,17 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
   window.AIAppNavigation = app;
   const clockRate = 29000;
   let lastGesture = -Infinity;
+  let timerReturn = null;
   let touchStart = null, pointerStart = null;
   const clamp = n => Math.min(LIMIT, Math.max(0, n));
   const now = () => performance.now();
-  const isControl = target => !!target?.closest?.('button,a,input,select,textarea,#sources,#navBtns');
+  const isControl = target => !!target?.closest?.('button,a,input,select,textarea,#sources');
 
   function paintFallback() {
     const n=app.index, wrap=$('countWrap'), hint=$('hint'), headline=$('headline'), chapter=$('chapter');
     wrap.classList.toggle('show',n>0);
     wrap.classList.toggle('corner',n>1 && n<LIMIT);
     wrap.classList.toggle('final',n===LIMIT);
-    $('navBack').disabled=n===0;
-    $('navNext').disabled=n===LIMIT;
     if(hint)hint.style.display=n===0?'block':'none';
     if(chapter)chapter.classList.remove('show');
     if(n<=1){headline.classList.remove('show');return;}
@@ -124,7 +116,10 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
     $('subtitle').textContent=app.loadError || app.stage;
   }
   function jump(requested) {
-    if($('sources')?.classList.contains('visible'))return;
+    if($('sources')?.classList.contains('visible')){
+      if(app.bridge?.sources)app.bridge.sources();
+      else $('sources').classList.remove('visible');
+    }
     const target=clamp(requested);
     if(target===app.index)return;
     if(!app.startedAt && target>0)app.startedAt=now();
@@ -142,26 +137,40 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
   window.addEventListener('unhandledrejection',e=>{
     if(!app.bridge)app.fail('Loading error: '+(e.reason?.message||e.reason||'unknown error'));
   });
-  app.next=()=>jump(app.index+1);
-  app.prev=()=>jump(app.index-1);
+  app.next=()=>{timerReturn=null;jump(app.index+1);};
+  app.prev=()=>{timerReturn=null;jump(app.index-1);};
+  app.timer=()=>{
+    if(app.index!==1){timerReturn=app.index;jump(1);}
+    else {const destination=timerReturn===null?2:timerReturn;timerReturn=null;jump(destination);}
+  };
+  app.sources=()=>{
+    if(app.bridge?.sources)app.bridge.sources();
+    else $('sources')?.classList.toggle('visible');
+  };
   app.bind=function(bridge){
     app.bridge=bridge;
     // Reconcile any swipes that occurred while the Three.js module loaded.
     try{bridge.goto(app.index);}
     catch(error){console.error('3D startup failed; navigation fallback activated',error);app.bridge=null;paintFallback();}
   };
-  $('navBack').addEventListener('click',e=>{e.stopPropagation();app.prev()});
-  $('navNext').addEventListener('click',e=>{e.stopPropagation();app.next()});
   function keydown(e){
     if(e.altKey||e.ctrlKey||e.metaKey||isControl(e.target)&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName||''))return;
-    if(['ArrowRight',' ','Enter','PageDown'].includes(e.key)){e.preventDefault();app.next();}
-    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();app.prev();}
-    else if(e.key?.toLowerCase()==='f'){
-      // Safari/iPad may prohibit fullscreen; navigation remains independent.
+    const key=String(e.key||'').toLowerCase();
+    if(['ArrowRight','ArrowDown',' ','Enter','PageDown'].includes(e.key)){
+      e.preventDefault();app.next();
+    }else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){
+      e.preventDefault();app.prev();
+    }else if(key==='s'){
+      e.preventDefault();app.sources();
+    }else if(key==='t'){
+      e.preventDefault();app.timer();
+    }else if(key==='escape' && $('sources')?.classList.contains('visible')){
+      e.preventDefault();app.sources();
+    }else if(key==='f'){
+      e.preventDefault();
       if(document.fullscreenElement)document.exitFullscreen?.();
-      else document.documentElement.requestFullscreen?.();
+      else document.documentElement.requestFullscreen?.()?.catch?.(()=>{});
     }
-    else if(e.key?.toLowerCase()==='s')app.bridge?.sources?.();
   }
   window.addEventListener('keydown',keydown,{capture:true});
   function finish(x,y,start){
@@ -278,7 +287,10 @@ function prepareMap(){
    // Build map-only 3D objects after the globe has already started.
    try{ensureMapScenes();installMapModels(realMap);}
    catch(err){console.error('Optional geographic 3D objects failed',err);}
-
+   realMap.on('idle',()=>{
+     if(activeMode==='map'&&slides[index]?.shot==='port'&&geoVehicleState.port?.terminal&&!geoVehicleState.port.quayAligned)
+       alignPortToMappedQuay();
+   });
    if(activeMode==='map'){mapDiv.classList.add('visible');world.style.opacity='0';}
   });
   realMap.on('error',e=>{console.warn('Map tiles unavailable',e)});
@@ -288,6 +300,7 @@ function mapFly(shot,duration=3400){
  prepareMap();const site=dubaiSites[shot];if(!site)return false;
  if(realMap){realMap.resize();realMap.flyTo({...site,duration,curve:1.3,essential:true});
   if(shot==='road'){const version=navigationVersion;setTimeout(()=>{if(version===navigationVersion&&slides[index]?.shot==='road')snapCarsToMappedRoads();},duration+550)}
+  if(shot==='port'){const version=navigationVersion;setTimeout(()=>{if(version===navigationVersion&&slides[index]?.shot==='port')alignPortToMappedQuay();},duration+400)}
   return true}
  return false;
 }
@@ -839,7 +852,7 @@ function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
 // Large connected terminal, based on Jebel Ali's long quays, crane rows and vast container yards.
 function buildPortMapScene(){
  const sc=geoScene('port',[55.0661,24.9922]);
- const terminal=new THREE.Group();terminal.rotation.y=.035;sc.add(terminal);
+ const terminal=new THREE.Group();terminal.rotation.y=0;sc.add(terminal);
  const dock=mat(0x879aa7,.91),asphaltYard=mat(0x667987,.93),cranePaint=mat(0xccad45,.55,.35);
  // Ground from OpenStreetMap remains visible. Add only the working quay edge,
  // crane tracks, container bases and narrow service roads on the landward side.
@@ -887,8 +900,64 @@ function buildPortMapScene(){
  const first=geoCargoShip(terminal,-390,-193,0xa83342,1.58);
  const second=geoCargoShip(terminal,70,-220,0x275d85,1.46);
  const third=geoCargoShip(terminal,505,-183,0x22746f,1.2);
- geoVehicleState.port={first,second,third,cranes};
+ geoVehicleState.port={first,second,third,cranes,terminal,quayAligned:false,alignmentAttempts:0};
 }
+// Fit this illustrative 3D quay to the coastline already drawn by OpenStreetMap.
+// The terminal is centered on SMDG's verified Jebel Ali CT1 coordinates.
+function alignPortToMappedQuay(){
+ const state=geoVehicleState.port,model=geoModels.port;
+ if(!state?.terminal||!model||!realMap||!mapReady)return false;
+ if(state.quayAligned)return true;
+ if(++state.alignmentAttempts>10)return false;
+ try{
+  const style=realMap.getStyle();
+  const waterLayers=(style?.layers||[]).filter(l=>l.type==='fill'&&/water|sea|ocean/i.test(l.id)&&!/label|pattern/i.test(l.id)).map(l=>l.id);
+  if(!waterLayers.length)return false;
+  const features=realMap.queryRenderedFeatures(undefined,{layers:waterLayers});
+  const [lon0,lat0]=model.origin,sz=111320,sx=sz*Math.cos(lat0*Math.PI/180);
+  const local=([lon,lat])=>({x:(lon-lon0)*sx,z:(lat0-lat)*sz});
+  const unproject=(x,z)=>[lon0+x/sx,lat0-z/sz];
+  const pointIsWater=(x,z)=>{
+   const pixel=realMap.project(unproject(x,z));
+   const canvas=realMap.getCanvas();
+   if(pixel.x<0||pixel.y<0||pixel.x>canvas.clientWidth||pixel.y>canvas.clientHeight)return null;
+   return realMap.queryRenderedFeatures(pixel,{layers:waterLayers}).length>0;
+  };
+  const edges=[];
+  for(const feature of features){
+   const geom=feature.geometry;
+   const polys=geom?.type==='Polygon'?[geom.coordinates]:geom?.type==='MultiPolygon'?geom.coordinates:[];
+   for(const poly of polys)for(const ring of poly)for(let i=1;i<ring.length;i++){
+    const a=local(ring[i-1]),b=local(ring[i]),dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
+    if(len<12||len>1700)continue;
+    const t=Math.min(1,Math.max(0,-(a.x*dx+a.z*dz)/(len*len)));
+    const near={x:a.x+dx*t,z:a.z+dz*t},distance=Math.hypot(near.x,near.z);
+    if(distance>1150)continue;
+    edges.push({near,tx:dx/len,tz:dz/len,distance});
+   }
+  }
+  edges.sort((a,b)=>a.distance-b.distance);
+  // A tile seam has water on both sides; a true shore has water on only one.
+  for(const e of edges.slice(0,90)){
+   let tx=e.tx,tz=e.tz,nx=-tz,nz=tx;
+   const left=pointIsWater(e.near.x+nx*33,e.near.z+nz*33);
+   const right=pointIsWater(e.near.x-nx*33,e.near.z-nz*33);
+   if(left===null||right===null||left===right)continue;
+   // Terminal's local +Z contains container yards, and local -Z contains ships.
+   if(left){tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
+   const yaw=-Math.atan2(tz,tx);
+   const quay=new THREE.Vector3(0,0,-93).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
+   state.terminal.rotation.y=yaw;
+   state.terminal.position.set(e.near.x-quay.x+nx*7,0,e.near.z-quay.z+nz*7);
+   state.quayAligned=true;
+   realMap.triggerRepaint();
+   console.info('Port berth aligned to mapped shoreline',e.near,'heading:',yaw);
+   return true;
+  }
+  return false;
+ }catch(e){console.warn('Waiting for Jebel Ali waterfront map tiles',e);return false;}
+}
+
 // Place the SAME school geometry into the geographic 3D map near Academic City.
 // During the transition this matches the exterior shown by the independent classroom renderer.
 function buildSchoolMapScene(){
@@ -1048,7 +1117,6 @@ function setKineticScene(s){
 
 const chapterNames=['','01 / HOW GLOBALISATION SHAPES AI','02 / OPPORTUNITIES & RISKS','03 / AI IN DUBAI','04 / LOCAL SOLUTIONS'];
 function setText(s){
- $('navBack').disabled=index===0;$('navNext').disabled=index>=slides.length-1;
  const head=s.headline;const immersive=s.chapter===2;const hideMain=!head||s.kind==='end'||s.kind==='timer'||immersive;setKineticScene(s);
  headline.classList.toggle('show',!hideMain);if(head){$('eyebrow').textContent=head[0];$('title').textContent=head[1];$('subtitle').textContent=head[2]}
  fact.classList.toggle('show',!!s.fact&&!immersive);if(s.fact){$('factMeta').textContent=s.fact[0];$('factTitle').textContent=s.fact[1];$('factBody').textContent=s.fact[2]}

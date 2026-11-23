@@ -5,8 +5,8 @@
 <title>The Global AI Revolution | Cinematic 3D</title>
 <style>
 :root{--ink:#f3f8ff;--soft:#bbcee5;--cyan:#83deff;--deep:#030912}*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;touch-action:pan-y}
-#world,#vignette,#ui,#stars,#geoMap{position:fixed;inset:0}#particleCanvas{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .8s ease}#particleCanvas.visible{opacity:1}#world{z-index:0;transition:opacity .7s ease}#geoMap{z-index:1;opacity:0;pointer-events:none;transition:opacity .9s ease;visibility:hidden}#geoMap.visible{opacity:1;visibility:visible}#geoMap .maplibregl-control-container{pointer-events:none}#geoMap .maplibregl-ctrl-bottom-right{bottom:64px!important;right:20px!important}#world canvas{width:100%;height:100%;display:block}#vignette{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(0,4,12,.68) 0%,rgba(0,4,12,.12) 42%,rgba(0,4,12,.24) 100%),linear-gradient(0deg,rgba(0,3,10,.56),transparent 27%)}#stars{z-index:-1}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none}
+#world,#vignette,#ui,#stars,#geoMap{position:fixed;inset:0}#particleCanvas{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .8s ease}#particleCanvas.visible{opacity:1}#world{z-index:0;transition:opacity .7s ease}#geoMap{touch-action:none;z-index:1;opacity:0;pointer-events:none;transition:opacity .9s ease;visibility:hidden}#geoMap.visible{opacity:1;visibility:visible}#geoMap .maplibregl-control-container{pointer-events:none}#geoMap .maplibregl-ctrl-bottom-right{bottom:64px!important;right:20px!important}#world canvas{width:100%;height:100%;display:block}#vignette{z-index:2;pointer-events:none;background:linear-gradient(90deg,rgba(0,4,12,.68) 0%,rgba(0,4,12,.12) 42%,rgba(0,4,12,.24) 100%),linear-gradient(0deg,rgba(0,3,10,.56),transparent 27%)}#stars{z-index:-1}
 
 /* Immersive particle-led visual storytelling; replaces Topic 2's floating fact-card layout. */
 #kineticScene{position:absolute;inset:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(10px);transition:opacity .65s ease,transform .65s ease;isolation:isolate}
@@ -61,6 +61,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 #overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#020710df;pointer-events:none;text-align:center;padding:20px}#overlay.visible{display:flex}#overlay strong{font-size:clamp(20px,3vw,36px)}
 @media(max-width:850px){#headline{width:min(54vw,600px)}#fact{right:5%;width:34vw;padding:18px}#headline h1{font-size:clamp(28px,4.3vw,55px)}#headline p{font-size:clamp(13px,1.45vw,18px)}}
 @media(max-width:680px){#headline{left:6%;bottom:14%;width:88vw}#fact{left:6%;right:auto;top:23%;width:80vw;padding:16px}#headline h1{font-size:clamp(30px,8vw,45px)}#headline p{font-size:14px}.chrome{font-size:9px;left:14px;top:15px}#countWrap.corner{right:13px;top:43px}#countWrap.corner .caption{display:none}#chapter{left:13px;bottom:15px}#chapter span{font-size:9px}}
+
+/* The navigation controls are an accessible fallback when iOS cancels gestures
+   or the WebGL map is rendering heavily. They are deliberately outside the map. */
+#navBtns{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:9px;z-index:28;pointer-events:auto}
+#navBtns button{width:48px;height:48px;display:grid;place-items:center;border:1px solid rgba(139,213,255,.44);border-radius:15px;background:rgba(5,18,36,.86);color:#d8f5ff;font-size:26px;line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(10px)}
+#navBtns button:disabled{opacity:.3}
+@media(max-width:680px){#navBtns{right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom))}#navBtns button{width:43px;height:43px}}
 </style>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -74,7 +81,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 <div id="fact"><div class="meta" id="factMeta"></div><h2 id="factTitle"></h2><p id="factBody"></p></div>
 <div id="hint">SWIPE OR TAP TO BEGIN</div>
 <div id="chapter"><div class="lines"><i></i><i></i><i></i><i></i></div><span id="chapterText"></span></div>
-<div id="veil"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. Dubai's airport, port, school and moving vehicles are illustrative 3D models aligned with mapped locations, not exact digital twins.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
+<div id="navBtns" aria-label="Presentation navigation"><button id="navBack" aria-label="Previous slide" type="button">&#8592;</button><button id="navNext" aria-label="Next slide" type="button">&#8594;</button></div><div id="veil"></div><div id="sources"><strong>Sources & context</strong><p>The timer is an estimate based on OpenAI's July 2025 statement of approximately 2.5 billion ChatGPT prompts daily; it is not a live measurement.</p><p>Locations verified: NVIDIA Santa Clara, ASML Veldhoven, TSMC Hsinchu, Johor Malaysia data centres; DISD Academic City; Jebel Ali Port. Dubai road travel uses OpenFreeMap / OpenStreetMap data. The classroom and school exterior are illustrative custom 3D reconstructions based on public campus photos, not precise scans.</p><p>Map data: OpenFreeMap / OpenStreetMap contributors. Dubai's airport, port, school and moving vehicles are illustrative 3D models aligned with mapped locations, not exact digital twins.</p><p><a href="https://openai.com/index/how-people-are-using-chatgpt/" target="_blank">OpenAI research</a> · <a href="https://aiindex.stanford.edu/" target="_blank">Stanford AI Index</a> · <a href="https://ai.gov.ae/" target="_blank">UAE AI Office</a></p></div>
 <div id="overlay"><strong>3D graphics unavailable on this device.<br>Try Safari or Chrome with WebGL enabled.</strong></div>
 </div>
 <script type="module">
@@ -86,7 +93,7 @@ let index=0, startTime=0, started=false, sourcesOn=false, moving=false;
 let navigationVersion=0;
 const canvasScene=new THREE.Scene(); canvasScene.background=new THREE.Color('#030b18');
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,('ontouchstart' in window)?1.25:1.8));renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
 world.appendChild(renderer.domElement);
 const camera=new THREE.PerspectiveCamera(44,innerWidth/innerHeight,.08,1200);
@@ -690,9 +697,13 @@ function installMapModels(map){
   this.camera.projectionMatrix=new THREE.Matrix4().fromArray(raw).multiply(correction);
   animateMapVehicles(performance.now()*.001);
   this.renderer.resetState();this.renderer.render(m.scene,this.camera);
-  this.map.triggerRepaint();
+  // Request an idle refresh at a controlled rate rather than forcing a
+  // continuous max-FPS MapLibre+Three.js render cycle on mobile devices.
+  if(!this.repaintTimer){this.repaintTimer=setTimeout(()=>{
+   this.repaintTimer=null;if(activeMode==='map'&&this.map)this.map.triggerRepaint();
+  },55);}
  },
- onRemove(){this.renderer?.dispose()}
+ onRemove(){if(this.repaintTimer)clearTimeout(this.repaintTimer);this.renderer?.dispose()}
  };
  try{map.addLayer(layer);console.info('Live 3D map models installed: airport planes, road cars, port ships, school');}
  catch(e){console.warn('3D map layer could not be installed',e)}
@@ -777,6 +788,7 @@ function setKineticScene(s){
 
 const chapterNames=['','01 / HOW GLOBALISATION SHAPES AI','02 / OPPORTUNITIES & RISKS','03 / AI IN DUBAI','04 / LOCAL SOLUTIONS'];
 function setText(s){
+ $('navBack').disabled=index===0;$('navNext').disabled=index>=slides.length-1;
  const head=s.headline;const immersive=s.chapter===2;const hideMain=!head||s.kind==='end'||s.kind==='timer'||immersive;setKineticScene(s);
  headline.classList.toggle('show',!hideMain);if(head){$('eyebrow').textContent=head[0];$('title').textContent=head[1];$('subtitle').textContent=head[2]}
  fact.classList.toggle('show',!!s.fact&&!immersive);if(s.fact){$('factMeta').textContent=s.fact[0];$('factTitle').textContent=s.fact[1];$('factBody').textContent=s.fact[2]}
@@ -846,7 +858,61 @@ function next(){if(sourcesOn)return;if(index===0&&!started){started=true;startTi
 function prev(){if(sourcesOn)return;if(index>0)gotoSlide(index-1)}
 function toggleSources(){sourcesOn=!sourcesOn;$('sources').classList.toggle('visible',sourcesOn)}
 document.addEventListener('keydown',e=>{if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();next()}else if(e.key==='ArrowLeft'){e.preventDefault();prev()}else if(e.key.toLowerCase()==='s')toggleSources();else if(e.key.toLowerCase()==='f'){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}});
-let touchX=0,touchY=0;document.addEventListener('touchstart',e=>{touchX=e.changedTouches[0].clientX;touchY=e.changedTouches[0].clientY},{passive:true});document.addEventListener('touchend',e=>{if(sourcesOn)return;const dx=e.changedTouches[0].clientX-touchX,dy=e.changedTouches[0].clientY-touchY;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))dx<0?next():prev();else if(Math.abs(dx)<16&&Math.abs(dy)<16)next()},{passive:true});document.addEventListener('click',e=>{if(e.target.closest('#sources'))return;if(!('ontouchstart'in window))next()});
+// Navigation is registered on WINDOW in the capture phase so MapLibre and
+// nested canvases cannot swallow the swipe by stopping event propagation.
+// Pointer Events provide a second path for iPad Safari/Chrome when touchend
+// is cancelled. A short guard prevents one gesture advancing two slides.
+const navBack=$('navBack'),navNext=$('navNext');
+navBack.addEventListener('click',e=>{e.stopPropagation();prev()});
+navNext.addEventListener('click',e=>{e.stopPropagation();next()});
+function isInteractiveTarget(t){return !!(t?.closest?.('#navBtns,#sources,a,button,input,textarea,select'))}
+let gestureStart=null,lastGestureAt=-Infinity;
+function startGesture(x,y,kind,target){gestureStart=isInteractiveTarget(target)?null:{x,y,kind,time:performance.now()}}
+function finishGesture(x,y,kind){
+ const g=gestureStart;if(!g||sourcesOn)return;
+ const dx=x-g.x,dy=y-g.y,elapsed=performance.now()-g.time;
+ if(elapsed>2000)return;
+ const horizontal=Math.abs(dx)>42&&Math.abs(dx)>Math.abs(dy)*1.12;
+ const tap=Math.abs(dx)<14&&Math.abs(dy)<14&&elapsed<650;
+ if(!horizontal&&!tap)return;
+ if(performance.now()-lastGestureAt<330)return;
+ lastGestureAt=performance.now();
+ if(horizontal){dx<0?next():prev()}else next();
+}
+window.addEventListener('touchstart',e=>{
+ if(e.touches.length!==1){gestureStart=null;return}
+ const t=e.touches[0];startGesture(t.clientX,t.clientY,'touch',e.target);
+},{capture:true,passive:true});
+window.addEventListener('touchmove',e=>{
+ if(!gestureStart||e.touches.length!==1)return;
+ const t=e.touches[0],dx=t.clientX-gestureStart.x,dy=t.clientY-gestureStart.y;
+ if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)*1.15&&e.cancelable)e.preventDefault();
+},{capture:true,passive:false});
+window.addEventListener('touchend',e=>{
+ if(!gestureStart||e.changedTouches.length!==1)return;
+ const t=e.changedTouches[0];finishGesture(t.clientX,t.clientY,'touch');gestureStart=null;
+},{capture:true,passive:true});
+window.addEventListener('touchcancel',()=>{gestureStart=null},{capture:true,passive:true});
+let pointerStart=null;
+window.addEventListener('pointerdown',e=>{
+ if(!e.isPrimary||isInteractiveTarget(e.target))return;
+ pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),type:e.pointerType};
+},{capture:true,passive:true});
+window.addEventListener('pointerup',e=>{
+ const p=pointerStart;if(!p||e.pointerId!==p.id)return;
+ pointerStart=null;
+ // The touch handler handles normal touch contacts. The pointer fallback is
+ // for cases where WebKit cancels the touch sequence but still fires pointerup.
+ if(p.type==='touch'&&gestureStart)return;
+ if(sourcesOn||performance.now()-p.t>1800||isInteractiveTarget(e.target))return;
+ const dx=e.clientX-p.x,dy=e.clientY-p.y;
+ const horizontal=Math.abs(dx)>42&&Math.abs(dx)>Math.abs(dy)*1.12;
+ const tap=Math.abs(dx)<14&&Math.abs(dy)<14&&performance.now()-p.t<650;
+ if(!horizontal&&!tap||performance.now()-lastGestureAt<330)return;
+ lastGestureAt=performance.now();if(horizontal){dx<0?next():prev()}else next();
+},{capture:true,passive:true});
+window.addEventListener('pointercancel',()=>{pointerStart=null},{capture:true,passive:true});
+document.addEventListener('click',e=>{if(isInteractiveTarget(e.target)||sourcesOn)return;if(!('ontouchstart'in window)&&e.detail!==0&&performance.now()-lastGestureAt>330){lastGestureAt=performance.now();next()}});
 
 camera.position.copy(globeBase.pos);cameraTarget.copy(globeBase.look);camera.lookAt(cameraTarget);switchMode('none');setText(slides[0]);
 function render(now){requestAnimationFrame(render);const dt=clock.getDelta();frameCamera(now);if(started){$('count').textContent=fmt(((now-startTime)/1000)*29000)}
@@ -869,6 +935,6 @@ function render(now){requestAnimationFrame(render);const dt=clock.getDelta();fra
  }
  renderer.render(canvasScene,camera);
 }
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.8))});requestAnimationFrame(render);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,('ontouchstart' in window)?1.25:1.8))});requestAnimationFrame(render);
 </script>
 </body></html>

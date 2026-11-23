@@ -613,71 +613,83 @@ for(let i=0;i<6;i++)for(let k=0;k<2;k++){box(5,2.8,5.2,containerMats[(i+k)%conta
 box(6,7,8,mat(0xe5e9ef),15.5,6.5,0,ship);box(.4,7,.4,steel,16,12,0,ship);
 // A second ship adds life to the port
 ship2=new THREE.Group();ship2.position.set(84,.55,-6);portWorld.add(ship2);box(28,3.8,9,mat(0x24496e,.5,.3),0,0,0,ship2);box(7,5,7,mat(0xe5e9ef),9,4.4,0,ship2);
-// School exterior to indoor classroom: fully geometrical coherent room
+// School exterior to indoor classroom: upgraded DISD-inspired reconstruction
+// based on the official website, 3D-tour thumbnails and the provided reference photos.
 school=new THREE.Group();school.position.set(530,0,-20);dubaiWorld.add(school);
-// Walls are hollow; no solid box blocks the camera entering the classroom.
-for (const px of [-15.5,15.5]) box(.9,14,.9,mat(0xc9bca6),px,7,12.4,school);
-box(34,1,27,mat(0xa6a19d),0,14.3,0,school);
-// front wall is transparent glass to show room during camera movement
-const facade=box(31,11,.15,new THREE.MeshPhysicalMaterial({color:0x85d2ed,transparent:true,opacity:.16,roughness:.18,metalness:.2,side:THREE.DoubleSide}),0,7,12.56,school);
-for(let x=-14;x<=14;x+=4.7)box(.18,11,.22,steel,x,7,12.6,school);
-box(31,.23,.3,steel,0,9.5,12.66,school);box(31,.23,.3,steel,0,4.5,12.66,school);
-// interior dark ceiling + actual walls/floor
-box(30,.25,24,wood,0,.2,0,school);box(30,.2,24,mat(0xf2efe6),0,12.5,0,school);
-box(.25,12.5,24,mat(0xe0dbd2),-15,6.25,0,school);box(.25,12.5,24,mat(0xe0dbd2),15,6.25,0,school);
-box(30,12.5,.25,mat(0xe0dbd2),0,6.25,-12,school);
-// large board
-box(14,7,.3,mat(0x143046,.28,.2),0,7.3,-11.7,school);box(14.2,.15,.35,steel,0,3.75,-11.65,school);
-const boardCanvas=document.createElement('canvas');boardCanvas.width=1024;boardCanvas.height=512;const bc=boardCanvas.getContext('2d');bc.fillStyle='#0e263d';bc.fillRect(0,0,1024,512);bc.fillStyle='#d7f4ff';bc.font='bold 110px Arial';bc.textAlign='center';bc.fillText('AI',512,240);bc.fillStyle='#86d8ff';bc.font='52px Arial';bc.fillText('Think globally, Act locally',512,345);const boardTex=new THREE.CanvasTexture(boardCanvas);const boardScreen=new THREE.Mesh(new THREE.PlaneGeometry(13.4,6.5),new THREE.MeshBasicMaterial({map:boardTex}));boardScreen.position.set(0,7.3,-11.46);school.add(boardScreen);
+const pearl=mat(0xe8e6df,.82,.02),warmWhite=mat(0xf3efe8,.86,.02),canopy=mat(0xd4ae5f,.76,.05),yellow=mat(0xefc236,.6,.2),paving=mat(0xd9d7d0,.95,.01),shadowGrey=mat(0xbfc4c8,.92,.02);
+const schoolGlassMat=new THREE.MeshPhysicalMaterial({color:0xcfe9f4,transparent:true,opacity:.18,roughness:.15,metalness:.12,transmission:.35,side:THREE.DoubleSide});
+// Forecourt and access path
+box(68,.15,34,paving,0,.05,28,school);box(42,.08,9,mat(0xcac8c1,.96,.01),0,.12,17.5,school);box(68,.26,2.1,shadowGrey,0,.2,44.3,school);
+for(let x=-26;x<=26;x+=4.1)box(.08,1.18,.08,steel,x,.84,44.2,school);box(68,.08,.14,steel,0,1.42,44.25,school);
+// The real campus has a low horizontal composition, a taller right tower, and a broad entrance canopy.
+box(29,8.6,15.8,pearl,-17.2,4.3,8.8,school); // left low wing
+box(24,16.5,16.3,pearl,17.8,8.25,7.8,school); // right tower block
+box(62,2.8,2.4,pearl,0,14.8,14.5,school);     // top signage band
+box(11.2,10.8,10.5,pearl,-28.4,5.4,7.2,school); // far left extension
+// Entrance vestibule / classroom shell behind the facade
+box(32,.2,28,wood,0,.12,-.2,school);box(32,.22,28,warmWhite,0,12.25,-.2,school); // floor and ceiling
+box(.24,12.2,28,warmWhite,-16,6.1,-.2,school);box(.24,12.2,28,warmWhite,16,6.1,-.2,school);box(32,12.2,.24,warmWhite,0,6.1,-14.1,school);
+// Side light wells and high clerestory glazing
+for(const x of [-15.72,15.72])for(let z=-11;z<=11;z+=4.6)box(.06,2.9,3.05,schoolGlassMat,x,8.8,z,school);
+// Front facade with an open central entrance, rather than one solid sheet of glass.
+box(10.9,10.8,.12,schoolGlassMat,-10.4,6.2,13.9,school);box(10.9,10.8,.12,schoolGlassMat,10.4,6.2,13.9,school);
+for(const x of [-15.4,-5.2,5.2,15.4])box(.2,10.9,.22,steel,x,6.25,14.02,school);
+box(32,.22,.28,steel,0,10.1,14.07,school);box(32,.22,.28,steel,0,3.9,14.07,school);
+// Open sliding doors in the middle for the camera move.
+box(3.7,4.6,.08,new THREE.MeshPhysicalMaterial({color:0xc6e6f2,transparent:true,opacity:.09,roughness:.14,metalness:.08,side:THREE.DoubleSide}),-2.1,3.7,14.0,school);
+box(3.7,4.6,.08,new THREE.MeshPhysicalMaterial({color:0xc6e6f2,transparent:true,opacity:.09,roughness:.14,metalness:.08,side:THREE.DoubleSide}),2.1,3.7,14.0,school);
+box(.18,10.8,.26,steel,-4.2,6.2,14.04,school);box(.18,10.8,.26,steel,4.2,6.2,14.04,school);
+// Exterior photo-like asymmetry: tower signage at right, English/German labels around the sun emblem.
+const signCanvas=document.createElement('canvas');signCanvas.width=2048;signCanvas.height=270;
+const sc=signCanvas.getContext('2d');sc.fillStyle='#ece9e0';sc.fillRect(0,0,2048,270);
+sc.fillStyle='#212a33';sc.textAlign='center';sc.font='700 68px Arial';
+sc.fillText('DEUTSCHE INTERNATIONALE SCHULE DUBAI',1024,112);
+sc.font='600 62px Arial';sc.fillText('GERMAN INTERNATIONAL SCHOOL DUBAI',1024,201);
+const signTex=new THREE.CanvasTexture(signCanvas);
+const signPanel=new THREE.Mesh(new THREE.PlaneGeometry(50,2.55),new THREE.MeshBasicMaterial({map:signTex}));
+signPanel.position.set(-2.2,14.9,15.84);school.add(signPanel);
+const sunCanvas=document.createElement('canvas');sunCanvas.width=256;sunCanvas.height=256;const sunCtx=sunCanvas.getContext('2d');sunCtx.clearRect(0,0,256,256);sunCtx.translate(128,128);sunCtx.fillStyle='#dba522';
+for(let i=0;i<14;i++){sunCtx.rotate(Math.PI/7);sunCtx.beginPath();sunCtx.moveTo(-11,-86);sunCtx.lineTo(0,-120);sunCtx.lineTo(11,-86);sunCtx.fill()} sunCtx.beginPath();sunCtx.arc(0,0,78,0,Math.PI*2);sunCtx.fill();sunCtx.fillStyle='#f1efe9';sunCtx.beginPath();sunCtx.arc(0,0,48,0,Math.PI*2);sunCtx.fill();
+const sunTex=new THREE.CanvasTexture(sunCanvas);const sunSign=new THREE.Mesh(new THREE.PlaneGeometry(2.8,2.8),new THREE.MeshBasicMaterial({map:sunTex,transparent:true,depthWrite:false}));sunSign.position.set(26.8,14.9,15.92);school.add(sunSign);
+// DISD canopy: long tensile roof with light steel structure.
+for(let x=-24;x<=24;x+=6){
+ cyl(.08,.08,5.1,steel,x,2.55,24.2,school);
+ cyl(.08,.08,4.55,steel,x,2.28,30.6,school);
+ const beam1=box(.12,.14,13.6,steel,x,5.06,21.7,school);beam1.rotation.x=-.18;
+ const beam2=box(.12,.14,10.7,steel,x,4.55,28.35,school);beam2.rotation.x=.18;
+}
+for(let j=0;j<15;j++){
+ const z=16.1+j*1.12;
+ const span=54-1.65*Math.abs(7-j);
+ const height=5.55+1.25*Math.sin((j/14)*Math.PI);
+ const panel=box(span,.1,1.2,canopy,0,height,z,school);panel.rotation.x=.12*Math.cos((j/14)*Math.PI);
+}
+// Entrance edges / planters / site furnishing similar to the official forecourt photos.
+for(const [x,z] of [[-25,34],[-15,36],[15,36],[26,34]]){cyl(.24,.31,2.15,wood,x,1.08,z,school);const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(1.7,1),mat(0x458852));crown.position.set(x,3.25,z);school.add(crown)}
+for(const [x,z] of [[-10.6,23.8],[10.6,23.8]]){box(1.4,.95,1.4,mat(0x7f93a5),x,.48,z,school);const shrub=new THREE.Mesh(new THREE.IcosahedronGeometry(1.02,1),mat(0x5f8f48));shrub.position.set(x,1.55,z);school.add(shrub)}
+box(3.8,.2,1.25,mat(0x4b86a4),-28.3,.5,31.8,school); // blue bench
+// Yellow school bus parked along the right side.
+const bus=new THREE.Group();bus.position.set(30,.7,25);school.add(bus);box(8.3,3.25,2.85,yellow,0,1.62,0,bus);box(1.2,2.1,2.5,yellow,3.9,1.65,0,bus);box(6.1,1.28,.08,darkGlass,-.15,2.38,1.46,bus);for(let x=-2.95;x<=2.7;x+=1.18)box(.76,.9,.05,new THREE.MeshBasicMaterial({color:0x0f1e2f}),x,2.42,1.5,bus);for(let x of [-2.9,2.9])for(let z of [-1.4,1.4]){const wheel=cyl(.6,.6,.25,mat(0x141b25),x,.45,z,bus);wheel.rotation.x=Math.PI/2;}
+// Classroom interior: brighter, more believable and aligned with a modern DISD room.
+box(12.5,7.2,.3,mat(0x17344b,.26,.22),0,7.15,-13.72,school);box(12.8,.15,.34,steel,0,3.72,-13.62,school);
+const boardCanvas=document.createElement('canvas');boardCanvas.width=1024;boardCanvas.height=512;const bc=boardCanvas.getContext('2d');bc.fillStyle='#11324a';bc.fillRect(0,0,1024,512);bc.fillStyle='#ddf7ff';bc.font='700 110px Arial';bc.textAlign='center';bc.fillText('AI',512,212);bc.fillStyle='#91dcff';bc.font='54px Arial';bc.fillText('Think globally, Act locally',512,322);bc.fillStyle='#bdeaff';bc.font='36px Arial';bc.fillText('AI literacy · Ethics · Problem solving',512,388);const boardTex=new THREE.CanvasTexture(boardCanvas);const boardScreen=new THREE.Mesh(new THREE.PlaneGeometry(12,6.2),new THREE.MeshBasicMaterial({map:boardTex}));boardScreen.position.set(0,7.1,-13.53);school.add(boardScreen);
+// Teacher station and side cabinets
+box(5.4,.26,2.1,wood,-9.3,3.1,-8.5,school);for(let dx of [-2.2,2.2])for(let dz of [-.8,.8])box(.15,2.8,.15,steel,-9.3+dx,1.45,-8.5+dz,school);box(2.2,.14,1.3,mat(0x2b3f56),-9.2,3.34,-8.45,school);
+box(4.8,3.2,1.4,mat(0xe0e0dc),13.2,1.72,-10.2,school);for(let y of [1.1,2.1])box(4.7,.08,1.26,mat(0xc9c8c2),13.2,y,-10.2,school);
+// Ceiling lights
+for(let x of [-9.5,0,9.5])for(let z of [-7.8,-1.2,5.4])box(3.3,.08,1.02,new THREE.MeshBasicMaterial({color:0xf2f5f8}),x,11.95,z,school);
+// Desk rows with chairs and tablets
 for(let row=0;row<3;row++)for(let col=0;col<4;col++){
- const x=-10.5+col*7,z=-4+row*5.4;
- box(5.2,.35,2.7,wood,x,2.9,z,school);for(let dx of [-2.2,2.2])for(let dz of [-1,1])box(.16,2.7,.16,steel,x+dx,1.4,z+dz,school);
- box(2,.15,1.4,mat(0x293b50),x,3.15,z,school);box(.12,1.4,1.3,darkGlass,x,3.9,z-.6,school);
- box(2.1,.22,1.9,mat(0x285575),x,1.6,z+2.25,school);
- }
-// Academic City exterior inspired by the reference photos: white facade, sun emblem,
-// yellow tensile entrance canopy, fencing, trees, and yellow school transport.
-const pearl=mat(0xe7e6e1,.8,.02),canopy=mat(0xd4ae5f,.78,.05),yellow=mat(0xefc236,.6,.2);
-// School building wings frame the glass classroom entrance, but do not block the camera path.
-box(10,14,13,pearl,-21,7,6.5,school);box(10,14,13,pearl,21,7,6.5,school);
-box(50,4,2,pearl,0,13,13.5,school);
-// A familiar yellow sun on the facade, drawn into a textured panel.
-const sunCanvas=document.createElement('canvas');sunCanvas.width=256;sunCanvas.height=256;
-const sunCtx=sunCanvas.getContext('2d');sunCtx.clearRect(0,0,256,256);sunCtx.translate(128,128);sunCtx.fillStyle='#dba522';
-for(let i=0;i<12;i++){sunCtx.rotate(Math.PI/6);sunCtx.beginPath();sunCtx.moveTo(-9,-91);sunCtx.lineTo(0,-118);sunCtx.lineTo(9,-91);sunCtx.fill()}
-sunCtx.beginPath();sunCtx.arc(0,0,77,0,Math.PI*2);sunCtx.fill();sunCtx.fillStyle='#f1efe9';sunCtx.beginPath();sunCtx.arc(0,0,48,0,Math.PI*2);sunCtx.fill();
-const sunTex=new THREE.CanvasTexture(sunCanvas);
-const sunSign=new THREE.Mesh(new THREE.PlaneGeometry(4.8,4.8),new THREE.MeshBasicMaterial({map:sunTex,transparent:true,depthWrite:false}));sunSign.position.set(7,13.2,14.58);school.add(sunSign);
-// Large white entrance canopy with warm tan panels, supported by slender steel columns.
-for(let x=-21;x<=20;x+=5.7){
- cyl(.08,.08,5.2,steel,x,2.6,24,school);
- const rib=box(.12,.14,15,steel,x,5.15,19,school);rib.rotation.x=-.05;
+ const x=-10.5+col*7.0,z=-4.7+row*5.3;
+ box(5.25,.33,2.75,wood,x,2.92,z,school);for(let dx of [-2.22,2.22])for(let dz of [-1.05,1.05])box(.16,2.72,.16,steel,x+dx,1.42,z+dz,school);
+ box(1.88,.12,1.28,mat(0x304559),x,3.19,z-.03,school);box(.12,1.38,1.28,darkGlass,x,3.88,z-.68,school);box(.92,.08,.62,new THREE.MeshBasicMaterial({color:0x0c2032}),x+.82,3.22,z+.02,school);
+ box(2.18,.23,1.95,mat(0x2b5876),x,1.65,z+2.17,school);box(2,.12,1.72,mat(0x2f5f80),x,2.75,z+2.17,school);box(.13,1.08,.13,steel,x-.84,2.2,z+2.92,school);box(.13,1.08,.13,steel,x+.84,2.2,z+2.92,school);
 }
-// Segmented curved tensile shade canopy, using real 3D depth rather than a solid flat slab.
-for(let j=0;j<13;j++){
- const z=11.6+j*1.28;
- const height=5.35+1.1*Math.sin((j/12)*Math.PI);
- const panel=box(46,.09,1.38,canopy,0,height,z,school);
- panel.rotation.x=.10*Math.cos((j/12)*Math.PI);
-}
-for(let x=-22;x<22;x+=8)box(.18,2.2,.18,steel,x,1.1,34,school);
-for(let x=-22;x<=22;x+=3.7)box(.06,1.1,.06,steel,x,.9,34,school);
-box(46,.18,.16,steel,0,2.25,34,school);
-// Planted landscaping and palm-like shrubs soften the entrance.
-for(let [x,z] of [[-24,31],[-14,33],[14,33],[25,30]]){
- cyl(.24,.32,2.2,wood,x,1.1,z,school);
- const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(1.6,1),mat(0x3b8452));crown.position.set(x,3.3,z);school.add(crown);
-}
-// Yellow bus parked to the side, like the supplied school-exterior photo.
-const bus=new THREE.Group();bus.position.set(28,.7,23);school.add(bus);
-box(8,3.2,2.7,yellow,0,1.6,0,bus);box(5.6,1.25,.08,darkGlass,-.6,2.35,1.4,bus);
-for(let x of [-2.8,2.8])for(let z of [-1.35,1.35]){const wheel=cyl(.58,.58,.24,mat(0x151d28),x,.45,z,bus);wheel.rotation.x=Math.PI/2;}
-// school sign outside (3D textured plane)
-const signCanvas=document.createElement('canvas');signCanvas.width=1536;signCanvas.height=220;const sc=signCanvas.getContext('2d');sc.fillStyle='#e7e6e1';sc.fillRect(0,0,1536,220);sc.fillStyle='#202b37';sc.font='bold 67px Arial';sc.textAlign='center';sc.fillText('GERMAN INTERNATIONAL SCHOOL DUBAI',768,130);const signTex=new THREE.CanvasTexture(signCanvas);const sign=new THREE.Mesh(new THREE.PlaneGeometry(29,4.2),new THREE.MeshBasicMaterial({map:signTex}));sign.position.set(-6,13.5,14.63);school.add(sign);
-// User-provided photograph used as an exterior facade reference plate in the 3D camera scene.
-// It fades naturally as the camera approaches the glass; the classroom remains actual 3D geometry.
-// Removed the photo billboard that cut through the school's 3D geometry.
-// Exterior detail is now a 3D reconstruction; the geographical approach uses real map data.
+// Back-wall shelving and a digital display
+box(6.1,4.1,.55,mat(0xe1e3e5),-12.6,2.25,11.7,school);for(let y of [.9,2.15,3.4])box(5.9,.08,.46,mat(0xcfd4d7),-12.6,y,11.7,school);box(5.3,3.3,.18,mat(0xeff0f1),11.7,5.8,11.86,school);box(4.5,2.45,.08,new THREE.MeshBasicMaterial({color:0x2f526f}),11.7,5.8,11.98,school);
+// Corridor carpet guides the camera from the entrance into the room.
+box(3.4,.03,22,mat(0x75879a,.96,.02),0,.15,.9,school);
+// Exterior detail is a 3D reconstruction grounded on public DISD imagery and location data.
 
 
 }
@@ -1050,21 +1062,25 @@ const dubaiPoses={
   airport:{pos:new THREE.Vector3(-80,11,46),look:new THREE.Vector3(-56,5,-12),fov:43},
   road:{pos:new THREE.Vector3(-138,5.5,35),look:new THREE.Vector3(-116,3,-26),fov:54},
   port:{pos:new THREE.Vector3(240,92,235),look:new THREE.Vector3(240,8,13),fov:49},
-  schoolOutside:{pos:new THREE.Vector3(530,6.3,33),look:new THREE.Vector3(530,6.2,-17),fov:47},
-  schoolInside:{pos:new THREE.Vector3(530,5,-22),look:new THREE.Vector3(530,7,-31),fov:62}
+  schoolOutside:{pos:new THREE.Vector3(529.2,7.1,43),look:new THREE.Vector3(530,5.4,10),fov:44},
+  schoolInside:{pos:new THREE.Vector3(530,5.1,-18.5),look:new THREE.Vector3(530,7,-31.2),fov:58}
 };
 let dubaiGoal='skyline',movingSchool=false;
 function flashTransition(duration=680){const v=$('veil');v.classList.add('on');setTimeout(()=>v.classList.remove('on'),duration);}
 function flyThroughSchool(){
  cameraTween=null;
  const start=camera.position.clone();
- // The camera approaches the REAL model facade at world z≈-7, then enters
- // through its transparent glass frontage and proceeds to the actual board.
+ // Descend below the canopy, pass the entrance, then follow the central aisle.
  const curve=new THREE.CatmullRomCurve3([start,
-  new THREE.Vector3(530,5.0,24),new THREE.Vector3(530,4.65,8),
-  new THREE.Vector3(530,4.65,-6),new THREE.Vector3(530,5.4,-14),
-  dubaiPoses.schoolInside.pos.clone()],false,'catmullrom',.25);
- cameraPath={curve,start:performance.now(),duration:5100};
+  new THREE.Vector3(529.6,6.7,37),
+  new THREE.Vector3(530,4.9,31),
+  new THREE.Vector3(530,4.55,20),
+  new THREE.Vector3(530,4.48,11.5),
+  new THREE.Vector3(530,4.65,3.2),
+  new THREE.Vector3(530,4.8,-5.8),
+  new THREE.Vector3(530,5.05,-12.8),
+  dubaiPoses.schoolInside.pos.clone()],false,'catmullrom',.18);
+ cameraPath={curve,start:performance.now(),duration:6000};
 }
 function switchMode(mode){
  if(activeMode===mode)return;
@@ -1149,7 +1165,7 @@ function gotoSlide(i){
    if(activeMode==='map'){
     const token=navigationVersion;flashTransition(700);
     setTimeout(()=>{if(navigationVersion!==token)return;switchMode('dubai');
-      camera.position.set(530,6.2,40);cameraTarget.set(530,6,-12);camera.lookAt(cameraTarget);
+      camera.position.set(530,6.5,42);cameraTarget.set(530,5.5,15);camera.lookAt(cameraTarget);
       flyThroughSchool();},280);
    }else {switchMode('dubai');flyThroughSchool();}
    return;
@@ -1168,8 +1184,8 @@ function gotoSlide(i){
        if(navigationVersion!==token)return;
        switchMode('dubai');
        // Same 3D geometry as the school already rendered on the geographic map.
-       camera.position.set(530,8.3,52);cameraTarget.set(530,6,-10);camera.lookAt(cameraTarget);
-       tweenCamera(dubaiPoses.schoolOutside,2400);
+       camera.position.set(529.4,9.4,57);cameraTarget.set(530,6.3,12);camera.lookAt(cameraTarget);
+       tweenCamera(dubaiPoses.schoolOutside,2600);
      },320);
     },3250);
    }else{switchMode('dubai');tweenCamera(dubaiPoses.schoolOutside,3200)}

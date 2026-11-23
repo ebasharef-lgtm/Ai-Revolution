@@ -620,7 +620,7 @@ function geoPlane(parent,mx,my,mz,scale=1){
  // DXB's long linear concourses with glass frontage, ribbed roofs, gates and airbridges.
  const halls=[[-480,-20,520],[150,12,590],[690,15,370]];
  for(let h=0;h<halls.length;h++){
-  const [cx,cz,len]=h;
+  const [cx,cz,len]=halls[h];
   geoBox(airfield,len,21,53,mat(0xabbfcf,.65,.25),cx,13,cz);
   geoBox(airfield,len+10,2.6,62,mat(0xdbe7ee,.62,.3),cx,25,cz);
   for(let x=cx-len/2+8;x<cx+len/2-5;x+=13){

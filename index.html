@@ -252,9 +252,9 @@ let realMap=null, mapReady=false, mapBroken=false, mapFlightVersion=0;
 const mapDiv=$('geoMap');
 const dubaiSites={
  skyline:{center:[55.2805,25.1925],zoom:15.4,pitch:67,bearing:19,label:'DOWNTOWN DUBAI'},
- airport:{center:[55.3657,25.2532],zoom:16.25,pitch:60,bearing:33,label:'DUBAI INTERNATIONAL AIRPORT'},
- road:{center:[55.2678,25.1706],zoom:16.9,pitch:64,bearing:26,label:'DUBAI STREETS'},
- port:{center:[55.0661,24.9922],zoom:15.85,pitch:60,bearing:-8,label:'JEBEL ALI PORT'},
+ airport:{center:[55.3657,25.2532],zoom:15.95,pitch:55,bearing:31,label:'DUBAI INTERNATIONAL AIRPORT'},
+ road:{center:[55.2678,25.1706],zoom:17.35,pitch:56,bearing:22,label:'DUBAI STREETS'},
+ port:{center:[55.0661,24.9922],zoom:16.05,pitch:57,bearing:-5,label:'JEBEL ALI PORT'},
  schoolOutside:{center:[55.40215,25.10773],zoom:18.2,pitch:76,bearing:6,label:'GERMAN INTERNATIONAL SCHOOL DUBAI'}
 };
 function prepareMap(){
@@ -414,7 +414,60 @@ function setParticleMode(mode){
 }
 // The 2D particle visual is deliberately the STORY in Topic 2, not decorative background.
 const particleStars=Array.from({length:110},(_,i)=>({x:(i*.618033988749895)%1,y:(i*.754877666)%1}));
+function drawFinalParticleNetwork(ms){
+ const ctx=particleCtx,w=pw,h=ph,t=ms*.001;
+ ctx.clearRect(0,0,w,h);
+ camera.updateMatrixWorld();earthHolder.updateMatrixWorld(true);
+ const c=new THREE.Vector3(0,0,0).applyMatrix4(earthHolder.matrixWorld).project(camera);
+ const rim=new THREE.Vector3(sphereR,0,0).applyMatrix4(earthHolder.matrixWorld).project(camera);
+ const cx=(c.x*.5+.5)*w,cy=(.5-c.y*.5)*h;
+ const radius=Math.max(90,Math.abs(rim.x-c.x)*w*.5);
+ const glow=ctx.createRadialGradient(cx,cy,radius*.2,cx,cy,radius*2.0);
+ glow.addColorStop(0,'rgba(30,111,214,0)');
+ glow.addColorStop(.55,'rgba(35,139,244,.065)');
+ glow.addColorStop(1,'rgba(0,0,0,0)');
+ ctx.fillStyle=glow;ctx.fillRect(0,0,w,h);
+ const dots=[],turn=t*.22;
+ for(let i=0;i<PARTICLE_N;i++){
+  const d=particleDots[i],spin=turn+.18*Math.sin(t*.2+i*.06);
+  const x3=d.x*Math.cos(spin)-d.z*Math.sin(spin);
+  const z3=d.x*Math.sin(spin)+d.z*Math.cos(spin);
+  const shell=1.26+.25*(.5+.5*Math.sin(i*.49));
+  const x=cx+x3*radius*shell,y=cy+d.y*radius*shell*.86;
+  const alpha=(.30+.58*(z3+1)/2)*(.75+.25*Math.sin(t*.7+i*.1)**2);
+  dots.push({x,y,z:z3,alpha});
+ }
+ ctx.save();ctx.globalCompositeOperation='screen';
+ // Same thin web strokes and fine circular dots as the opportunity/risk scenes.
+ for(let i=0;i<PARTICLE_N;i+=3){
+  const a=dots[i];
+  for(const shift of [13,21]){
+   const b=dots[(i+shift)%PARTICLE_N];
+   const gap=Math.hypot(a.x-b.x,a.y-b.y);
+   if(gap<radius*.43 && (a.z+b.z)>-.45){
+    ctx.strokeStyle='rgba(113,195,255,'+(.045+.05*(1+Math.sin(t*.8+i))*.5)+')';
+    ctx.lineWidth=.65;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+   }
+  }
+ }
+ for(let i=0;i<PARTICLE_N;i++){
+  const d=dots[i],r=(i%31===0?2.2:1.15)+(d.z>0?.15:0);
+  ctx.beginPath();ctx.arc(d.x,d.y,r,0,Math.PI*2);
+  ctx.fillStyle=i%11===0?'rgba(187,158,255,'+d.alpha+')':'rgba(131,205,255,'+d.alpha+')';ctx.fill();
+ }
+ // Animated signal packets orbit the Earth rather than appearing as static square sprites.
+ for(let ring=0;ring<4;ring++)for(let bead=0;bead<7;bead++){
+  const angle=t*(.24+.05*ring)+bead*Math.PI*2/7+ring*.93;
+  const rx=radius*(1.38+ring*.11),ry=radius*(.42+ring*.08);
+  const x=cx+Math.cos(angle)*rx,y=cy+Math.sin(angle)*ry;
+  ctx.beginPath();ctx.arc(x,y,1.8,0,Math.PI*2);
+  ctx.fillStyle='rgba(173,237,255,'+(.43+.32*Math.sin(angle)**2)+')';ctx.fill();
+ }
+ ctx.restore();
+}
+
 function drawParticles(ms){
+ if(particleMode==='final'){drawFinalParticleNetwork(ms);return;}
  if(!particleCanvas.classList.contains('visible'))return;
  const t=ms*.001,dt=Math.min(.06,(ms-particleLast)*.001||.016);particleLast=ms;
  particleShape+=(particleGoal-particleShape)*Math.min(1,dt*2.4);
@@ -647,57 +700,65 @@ function geoPlane(parent,mx,my,mz,scale=1){
 // This is a geographically positioned illustration, not a surveyed airport digital twin.
 function buildAirportMapScene(){
  const sc=geoScene('airport',[55.3657,25.2532]);
- const airfield=new THREE.Group(); airfield.rotation.y=-.55;sc.add(airfield);
- const runwayMat=mat(0x2c3641,.98),taxiMat=mat(0x475663,.95),apronMat=mat(0x687681,.98);
- const white=new THREE.MeshBasicMaterial({color:0xeaf2fa});
- const amber=new THREE.MeshBasicMaterial({color:0xd2a54a});
- for(const [j,z] of [-240,240].entries()){
-  const xOff=j===0?-100:110;
-  geoBox(airfield,1880,.16,58,runwayMat,xOff,.07,z);
-  for(let x=-900;x<930;x+=55){geoBox(airfield,24,.04,1.2,white,x+xOff,.18,z)}
-  for(let x=-910;x<915;x+=28)for(const dz of [-31,31])geoBox(airfield,1,.08,1,white,x+xOff,.17,z+dz);
-  for(let end of [-1,1])for(let j=0;j<5;j++){
-   geoBox(airfield,11,.03,1.25,white,xOff+end*885,.19,z+(j-2)*4.5);
+ // DXB's 12/30 runways are southeast/northwest. Local +X is east and +Z south;
+ // -30deg around Y puts their long axes along that real airport orientation.
+ const field=new THREE.Group();field.rotation.y=-Math.PI/6;sc.add(field);
+ const runway=mat(0x303944,.96),taxiway=mat(0x566775,.93),paving=mat(0x8a9ca7,.95);
+ const white=new THREE.MeshBasicMaterial({color:0xf0f5fc}),yellow=new THREE.MeshBasicMaterial({color:0xffc85c});
+ const concreteRoof=mat(0xc1d0d8,.58,.18),facade=mat(0x7998ad,.38,.4);
+ // No giant foundation hovering over the actual basemap: only real airfield strips.
+ for(const [j,z] of [-300,300].entries()){
+  const shift=j===0?-140:160;
+  geoBox(field,3470,.08,49,runway,shift,.05,z);
+  for(let x=-1630;x<=1660;x+=62)geoBox(field,26,.035,1.1,white,x+shift,.13,z);
+  for(let x=-1670;x<1700;x+=47)for(const edge of [-25,25])
+   geoBox(field,1.0,.035,.85,white,x+shift,.14,z+edge);
+  geoBox(field,3450,.06,21,taxiway,shift,.10,z+(z<0?77:-77));
+  for(let x=-1660;x<1690;x+=36)
+   geoBox(field,14,.03,.45,yellow,x+shift,.15,z+(z<0?77:-77));
+ }
+ // Connecting taxiways follow the layout, all parallel / perpendicular in the airport group.
+ for(let x=-1320;x<=1370;x+=430){
+  geoBox(field,24,.055,455,taxiway,x,.12,0);
+  geoBox(field,.7,.03,455,yellow,x,.16,0);
+ }
+ // Four distinctive long DXB terminal piers occupy the space between the runways.
+ const piers=[{x:-1130,z:-70,len:475},{x:-450,z:45,len:580},{x:370,z:-55,len:660},{x:1080,z:45,len:455}];
+ const parked=[],service=[];
+ for(let pi=0;pi<piers.length;pi++){
+  const p=piers[pi];
+  geoBox(field,p.len+60,.06,170,paving,p.x,.06,p.z);
+  geoBox(field,p.len,17,35,facade,p.x,9.2,p.z);
+  geoBox(field,p.len+8,2.6,40,concreteRoof,p.x,19.4,p.z);
+  for(let x=p.x-p.len/2+16;x<p.x+p.len/2-15;x+=20){
+   geoBox(field,10,.85,41,concreteRoof,x,21.1,p.z);
+   for(const side of [-1,1])geoBox(field,12,7,.5,geoWindow,x,10,p.z+side*18);
   }
-  geoBox(airfield,1830,.10,24,taxiMat,xOff,.14,z+(z<0?77:-77));
-  for(let x=-855;x<870;x+=22)geoBox(airfield,9,.035,.65,amber,x+xOff,.24,z+(z<0?77:-77));
- }
- // Taxiway bridges span the aprons between the parallel runways.
- for(let x=-680;x<760;x+=240){geoBox(airfield,25,.08,415,taxiMat,x,.11,0);geoBox(airfield,1.15,.035,405,amber,x,.17,0)}
- geoBox(airfield,1570,.10,210,apronMat,30,.05,0);
- // DXB's long linear concourses with glass frontage, ribbed roofs, gates and airbridges.
- const halls=[[-480,-20,520],[150,12,590],[690,15,370]];
- for(let h=0;h<halls.length;h++){
-  const [cx,cz,len]=halls[h];
-  geoBox(airfield,len,21,53,mat(0xabbfcf,.65,.25),cx,13,cz);
-  geoBox(airfield,len+10,2.6,62,mat(0xdbe7ee,.62,.3),cx,25,cz);
-  for(let x=cx-len/2+8;x<cx+len/2-5;x+=13){
-   geoBox(airfield,3.7,1.6,61,mat(0xb3c9d3,.45,.38),x,27.2,cz);
-   for(let side of [-1,1])geoBox(airfield,8,7,.7,geoWindow,x,13,cz+side*27.2);
+  for(let slot=0;slot<4;slot++){
+   const x=p.x-p.len/2+70+slot*(p.len-140)/3;
+   const side=(slot%2===0?-1:1);
+   const z=p.z+side*104;
+   // Parked airplanes docked at the terminal, not isolated floating on a slab.
+   const plane=geoPlane(field,x,3,z,1.06);
+   plane.rotation.y=side<0?-Math.PI/2:Math.PI/2;
+   parked.push(plane);
+   geoBox(field,3.4,2.9,42,concreteRoof,x,8,p.z+side*39);
+   geoBox(field,9,.055,60,taxiway,x,.135,p.z+side*149);
+   const tug=geoCar(field,slot%2?0xebbf38:0xe8edf0,x+25,z+side*18,1);
+   tug.scale.setScalar(.66);service.push(tug);
   }
  }
- const parked=[];const service=[];
- for(let i=0;i<18;i++){
-  const h=i%3, [cx,cz,len]=halls[h],slot=Math.floor(i/3);
-  const spacing=61, x=cx-len/2+36+(slot*spacing)%(len-72);
-  const side=i%2?1:-1,z=cz+side*92;
-  const p=geoPlane(airfield,x,3.6,z,1.28);
-  p.rotation.y=side<0?Math.PI/2:-Math.PI/2;
-  parked.push(p);
-  // Jet bridge runs from the terminal to the aircraft door.
-  geoBox(airfield,4,3.2,48,mat(0x9fb7c7,.55,.22),x,9,cz+side*47);
-  const tug=geoCar(airfield,i%3===0?0xf3cb40:0xe3e9ee,x+20,z+side*14,1);tug.scale.setScalar(.6);service.push(tug);
- }
- // Departures and landings fly across the same real-scale runway area.
- const departing=geoPlane(airfield,-900,3.6,-240,1.4);
- const arriving=geoPlane(airfield,900,90,240,1.34);
- arriving.rotation.y=Math.PI;
- const controlTower=new THREE.Mesh(new THREE.CylinderGeometry(8,10,56,16),geoFinish);
- controlTower.position.set(240,28,93);airfield.add(controlTower);
- geoBox(airfield,31,9,31,geoWindow,240,61,93);
- geoVehicleState.airport={departing,arriving,parked,service};
+ // Control tower and long central terminal connector.
+ geoBox(field,230,15,25,facade,-60,10,25);
+ geoBox(field,238,2,29,concreteRoof,-60,18.5,25);
+ const tower=new THREE.Mesh(new THREE.CylinderGeometry(7,10,52,14),geoFinish);
+ tower.position.set(120,26,120);field.add(tower);
+ geoBox(field,24,8,24,geoWindow,120,56,120);
+ const departing=geoPlane(field,-1500,3.2,-300,1.36);
+ const arriving=geoPlane(field,1600,76,300,1.31);arriving.rotation.y=Math.PI;
+ const taxiing=geoPlane(field,-900,2.9,215,.87);
+ geoVehicleState.airport={departing,arriving,taxiing,parked,service};
 }
-
 function geoCar(parent,paint,x,z,direction=1){
  const grp=new THREE.Group();grp.position.set(x,1.1,z);grp.rotation.y=direction<0?Math.PI:0;parent.add(grp);
  geoBox(grp,4.8,1.1,2.0,mat(paint,.35,.24),0,.3,0);geoBox(grp,2.7,.85,1.72,geoWindow,-.3,1.2,0);
@@ -709,8 +770,8 @@ function geoCar(parent,paint,x,z,direction=1){
 function buildRoadMapScene(){
  const sc=geoScene('road',[55.2678,25.1706]);
  const vehicles=[];const colors=[0xf6f6f2,0x275789,0xeac38d,0x36a7c2,0xd7e3f1,0x1e426f,0xeec45a];
- for(let i=0;i<22;i++){
-  const g=geoCar(sc,colors[i%colors.length],0,0,i%2?1:-1);g.visible=false;
+ for(let i=0;i<34;i++){
+  const g=geoCar(sc,colors[i%colors.length],0,0,i%2?1:-1);g.scale.setScalar(1.28);g.visible=false;
   vehicles.push({g,speed:11+(i%7)*2.5,progress:(i*.31)%1,offset:i%3});
  }
  geoVehicleState.road={vehicles,paths:[],center:[55.2678,25.1706]};
@@ -718,49 +779,54 @@ function buildRoadMapScene(){
 function snapCarsToMappedRoads(){
  if(!realMap||!mapReady||!geoVehicleState.road)return;
  try{
-  const style=realMap.getStyle();
-  const layers=style.layers.filter(l=>l.type==='line'&&/road|highway|street|transport|motorway/i.test(l.id)).map(l=>l.id);
+  const layers=(realMap.getStyle()?.layers||[]).filter(l=>l.type==='line'&&/road|street|highway|motorway|transport/i.test(l.id)).map(l=>l.id);
   if(!layers.length)return;
-  const rendered=realMap.queryRenderedFeatures(undefined,{layers});
-  const origin=geoVehicleState.road.center;
-  const latitudeScale=111320,longitudeScale=111320*Math.cos(origin[1]*Math.PI/180);
-  const candidates=[];const seen=new Set();
-  for(const f of rendered){
-   const roadClass=((f.properties?.class||f.properties?.highway||f.properties?.type||'')+'').toLowerCase();
-   if(roadClass&&!/motorway|trunk|primary|secondary/.test(roadClass))continue;
-   const type=f.geometry?.type,groups=type==='LineString'?[f.geometry.coordinates]:type==='MultiLineString'?f.geometry.coordinates:[];
+  const features=realMap.queryRenderedFeatures(undefined,{layers});
+  const [lon0,lat0]=geoVehicleState.road.center, scaleLat=111320,scaleLon=111320*Math.cos(lat0*Math.PI/180);
+  const candidates=[],seen=new Set();
+  for(const f of features){
+   const roadClass=String(f.properties?.class||f.properties?.highway||'').toLowerCase();
+   if(roadClass&&!/motorway|trunk|primary|secondary|tertiary|road/.test(roadClass))continue;
+   const groups=f.geometry?.type==='LineString'?[f.geometry.coordinates]:
+     f.geometry?.type==='MultiLineString'?f.geometry.coordinates:[];
    for(const line of groups){
-    if(line.length<4)continue;
-    // Model +z faces south in the MapLibre/Three.js projection.
-    const pts=line.map(([lon,lat])=>({x:(lon-origin[0])*longitudeScale,z:(origin[1]-lat)*latitudeScale}));
-    const inside=pts.some(p=>Math.abs(p.x)<520&&Math.abs(p.z)<360);
-    if(!inside)continue;
-    let len=0,minD=1e9;for(let i=1;i<pts.length;i++)len+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z);
-    for(const p of pts)minD=Math.min(minD,Math.hypot(p.x,p.z));
-    if(len<150||len>2800||minD>520)continue;
-    const key=[Math.round(pts[0].x/16),Math.round(pts[0].z/16),Math.round(pts.at(-1).x/16),Math.round(pts.at(-1).z/16)].join(':');
-    const rev=[Math.round(pts.at(-1).x/16),Math.round(pts.at(-1).z/16),Math.round(pts[0].x/16),Math.round(pts[0].z/16)].join(':');
-    if(seen.has(key)||seen.has(rev))continue;seen.add(key);
-    const cumulative=[0];for(let i=1;i<pts.length;i++)cumulative.push(cumulative[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
-    const classScore=/motorway/.test(roadClass)?900:/trunk/.test(roadClass)?650:/primary/.test(roadClass)?420:240;
-    candidates.push({pts,cumulative,len,score:len+classScore-minD*.35});
+    // A valid road can contain only TWO positions. The previous code ignored those.
+    if(!line||line.length<2)continue;
+    const pts=line.filter(v=>Number.isFinite(v?.[0])&&Number.isFinite(v?.[1]))
+     .map(([lon,lat])=>({x:(lon-lon0)*scaleLon,z:(lat0-lat)*scaleLat}));
+    if(pts.length<2)continue;
+    const minDist=Math.min(...pts.map(p=>Math.hypot(p.x,p.z)));
+    if(minDist>330||!pts.some(p=>Math.abs(p.x)<470&&Math.abs(p.z)<420))continue;
+    const cumulative=[0];
+    for(let i=1;i<pts.length;i++)cumulative.push(cumulative[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
+    const len=cumulative.at(-1);
+    if(len<38||len>3400)continue;
+    const key=[Math.round(pts[0].x/10),Math.round(pts[0].z/10),Math.round(pts.at(-1).x/10),Math.round(pts.at(-1).z/10)].join(':');
+    if(seen.has(key))continue;seen.add(key);
+    const classWeight=/motorway/.test(roadClass)?380:/trunk/.test(roadClass)?330:/primary/.test(roadClass)?260:120;
+    candidates.push({pts,cumulative,len,score:classWeight+len*.12-minDist*1.7});
    }
   }
   candidates.sort((a,b)=>b.score-a.score);
-  const paths=candidates.slice(0,14);
-  if(paths.length){
-   geoVehicleState.road.paths=paths;
-   geoVehicleState.road.vehicles.forEach((v,i)=>{v.g.visible=true;v.progress=(i*.173)%1;});
-  }
- }catch(e){console.warn('Waiting for road geometry',e)}
+  const paths=candidates.slice(0,11);
+  if(!paths.length)return;
+  geoVehicleState.road.paths=paths;
+  geoVehicleState.road.vehicles.forEach((v,i)=>{v.g.visible=true;v.pathIndex=i%paths.length;});
+  console.info('Road traffic now following',paths.length,'mapped street routes');
+ }catch(e){console.warn('Could not trace mapped road lanes yet',e);}
 }
+
 function placeCarOnMappedRoute(v,path,travel){
+ if(!path?.len)return;
  const dist=((travel%path.len)+path.len)%path.len;
  let k=1;while(k<path.cumulative.length-1&&path.cumulative[k]<dist)k++;
- const a=path.pts[k-1],b=path.pts[k],span=Math.max(.01,path.cumulative[k]-path.cumulative[k-1]),u=(dist-path.cumulative[k-1])/span;
- v.g.position.set(a.x+(b.x-a.x)*u,1.1,a.z+(b.z-a.z)*u);
- // +x is the model's nose; rotate car to tangent of actual road geometry.
- v.g.rotation.y=-Math.atan2(b.z-a.z,b.x-a.x);
+ const a=path.pts[k-1],b=path.pts[k],dx=b.x-a.x,dz=b.z-a.z;
+ const seg=Math.max(.01,path.cumulative[k]-path.cumulative[k-1]);
+ const u=(dist-path.cumulative[k-1])/seg;
+ const lane=(v.offset-1)*2.5;
+ // Position is in the exact same local east/south metres used by the map layer.
+ v.g.position.set(a.x+dx*u-dz/seg*lane,1.35,a.z+dz*u+dx/seg*lane);
+ v.g.rotation.y=-Math.atan2(dz,dx);
 }
 
 function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
@@ -773,47 +839,56 @@ function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
 // Large connected terminal, based on Jebel Ali's long quays, crane rows and vast container yards.
 function buildPortMapScene(){
  const sc=geoScene('port',[55.0661,24.9922]);
- const site=new THREE.Group();site.rotation.y=.04;sc.add(site);
- // Quay and container aprons read as a port district rather than a small prop.
- geoBox(site,1450,.42,490,mat(0x788994,.88),-30,0,160);
- geoBox(site,1455,2,12,mat(0x9aaab3,.65),-30,2,-94);
- for(let j=0;j<7;j++){
-  geoBox(site,1430,.11,13,mat(0x434f58),-30,.33,20+j*56);
-  for(let x=-705;x<700;x+=66)geoBox(site,16,.04,.7,roadWhite,x,.46,20+j*56);
+ const terminal=new THREE.Group();terminal.rotation.y=.035;sc.add(terminal);
+ const dock=mat(0x879aa7,.91),asphaltYard=mat(0x667987,.93),cranePaint=mat(0xccad45,.55,.35);
+ // Ground from OpenStreetMap remains visible. Add only the working quay edge,
+ // crane tracks, container bases and narrow service roads on the landward side.
+ geoBox(terminal,1530,.22,24,dock,-30,.12,-93);
+ geoBox(terminal,1510,.06,6,asphaltYard,-30,.17,-69);
+ for(const z of [25,130,235,340]){
+  geoBox(terminal,1390,.06,8,asphaltYard,-25,.14,z);
+  for(let x=-685;x<690;x+=58)geoBox(terminal,10,.025,.6,roadWhite,x,.20,z);
  }
- const portContainerColors=[new THREE.Color(0x26679c),new THREE.Color(0xc94b43),new THREE.Color(0xe3b74c),new THREE.Color(0x369fa2),new THREE.Color(0xe1e8ee),new THREE.Color(0x2b5777)];
- const count=620,inst=new THREE.InstancedMesh(new THREE.BoxGeometry(11.9,2.9,2.65),mat(0xffffff,.85),count);
- const ob=new THREE.Object3D();let idx=0;
- for(let row=0;row<5;row++)for(let col=0;col<24;col++)for(let layer=0;layer<4;layer++){
-  if(idx>=count)break;
-  const x=-520+col*42,z=70+row*64;
-  const jitter=(col%2)*2.2+(row%2)*1.1;
-  ob.position.set(x+jitter,2.0+layer*3.1,z);
-  ob.scale.set(1,1,1);ob.updateMatrix();inst.setMatrixAt(idx,ob.matrix);
-  inst.setColorAt(idx,portContainerColors[(col+row*3+layer)%portContainerColors.length]);idx++;
- }
- inst.count=idx;inst.instanceMatrix.needsUpdate=true;if(inst.instanceColor)inst.instanceColor.needsUpdate=true;
- site.add(inst);
- // Large coastal gantry cranes every ~110m along an extended berth.
- const cranes=[];
- for(let c=0;c<10;c++){
-  const x=-540+c*118,crane=new THREE.Group();crane.position.set(x,0,-115);site.add(crane);
-  for(let dx of [-15,15]){
-   geoBox(crane,2.6,70,2.6,geoMetal,dx,35,0);
-   geoBox(crane,2.4,70,2.4,geoMetal,dx,35,39);
+ // Separated storage blocks, not one endless raster of tiny multicoloured objects.
+ const colors=[0x286da5,0xc74439,0xdbaa45,0x308c8b,0xdfebef,0x385d78].map(c=>new THREE.Color(c));
+ const layout=[];
+ for(let block=0;block<5;block++)for(let row=0;row<3;row++)
+  for(let slot=0;slot<13;slot++)for(let level=0;level<2+(block+row)%2;level++){
+   // 60m drive aisles between blocks and 24m wide working lanes.
+   const x=-680+block*274+slot*16.2;
+   const z=68+row*88+(block%2)*7;
+   layout.push({x,z,y:1.8+level*3.0,color:(block+row+slot+level)%colors.length});
   }
-  geoBox(crane,98,3.7,6.5,geoMetal,-8,72,-14);
-  geoBox(crane,44,2.2,2.2,geoMetal,-35,58,0);
-  geoBox(crane,.5,35,.5,geoMetal,25,52,-18);
-  geoBox(crane,13,4,8,containerMats[c%containerMats.length],25,33,-18);
+ const containerGeo=new THREE.BoxGeometry(12.2,2.8,2.75);
+ const stacks=new THREE.InstancedMesh(containerGeo,mat(0xffffff,.82),layout.length);
+ const dummy=new THREE.Object3D();
+ for(let i=0;i<layout.length;i++){
+  const p=layout[i];dummy.position.set(p.x,p.y,p.z);dummy.updateMatrix();
+  stacks.setMatrixAt(i,dummy.matrix);stacks.setColorAt(i,colors[p.color]);
+ }
+ stacks.instanceMatrix.needsUpdate=true;
+ if(stacks.instanceColor)stacks.instanceColor.needsUpdate=true;
+ terminal.add(stacks);
+ // Ship-to-shore cranes point their booms out over the water (negative z).
+ const cranes=[];
+ for(let j=0;j<9;j++){
+  const crane=new THREE.Group();crane.position.set(-630+j*160,0,-86);terminal.add(crane);
+  for(const x of [-12,12]){
+   geoBox(crane,2.8,67,3.0,cranePaint,x,33,18);
+   geoBox(crane,2.8,67,3.0,cranePaint,x,33,46);
+  }
+  geoBox(crane,102,3.5,6,cranePaint,0,68,-14);
+  geoBox(crane,2.5,3,95,cranePaint,0,73,-25);
+  geoBox(crane,.5,37,.5,geoMetal,0,49,-72);
+  geoBox(crane,11,3,7,containerMats[j%containerMats.length],0,29,-72);
   cranes.push(crane);
  }
- const first=geoCargoShip(site,-265,-198,0xaa283a,1.58);
- const second=geoCargoShip(site,120,-248,0x244f7e,1.34);
- const third=geoCargoShip(site,455,-220,0x1c686e,1.02);
+ // All three hulls are on the water side of the quay, with their sides facing the cranes.
+ const first=geoCargoShip(terminal,-390,-193,0xa83342,1.58);
+ const second=geoCargoShip(terminal,70,-220,0x275d85,1.46);
+ const third=geoCargoShip(terminal,505,-183,0x22746f,1.2);
  geoVehicleState.port={first,second,third,cranes};
 }
-
 // Place the SAME school geometry into the geographic 3D map near Academic City.
 // During the transition this matches the exterior shown by the independent classroom renderer.
 function buildSchoolMapScene(){
@@ -829,21 +904,22 @@ function animateMapVehicles(t){
   a.departing.rotation.z=-Math.max(0,Math.min(.22,(dep-.56)*1.1));
   a.arriving.position.set(930-arr*1720,75*(1-Math.min(1,arr*2.0))+3.5,240);
   a.arriving.rotation.z=-Math.max(0,(.42-arr)*.18);
+  if(a.taxiing){const p=(t/37)%1;a.taxiing.position.set(-930+p*1450,2.9,215);a.taxiing.rotation.y=.045;}
  }
  if(geoVehicleState.road){const r=geoVehicleState.road;
   if(!r.paths.length){ // map tiles may still be loading during a flight
    if(activeMode==='map'&&slides[index]?.shot==='road'&&Math.floor(t)%3===0&&Math.random()<.02)snapCarsToMappedRoads();
   }else{
    for(let i=0;i<r.vehicles.length;i++){
-    const v=r.vehicles[i],path=r.paths[(i*7+Math.floor(i/5))%r.paths.length];
-    placeCarOnMappedRoute(v,path,t*v.speed+i*87);
+    const v=r.vehicles[i],path=r.paths[v.pathIndex%r.paths.length];
+    placeCarOnMappedRoute(v,path,t*v.speed+i*53);
    }
   }
  }
  if(geoVehicleState.port){const p=geoVehicleState.port;
-  p.first.position.x=-265+Math.sin(t*.11)*30;
-  p.second.position.x=120+Math.sin(t*.09+.4)*19;
-  p.third.position.x=455+Math.sin(t*.13+1)*26;
+  p.first.position.x=-390+Math.sin(t*.11)*17;
+  p.second.position.x=70+Math.sin(t*.09+.4)*15;
+  p.third.position.x=505+Math.sin(t*.13+1)*12;
   p.first.rotation.z=.008*Math.sin(t*.7);
   p.cranes.forEach((crane,i)=>{crane.children.at(-1).position.y=33+Math.sin(t*.65+i*.43)*4;});
  }
@@ -983,7 +1059,7 @@ function setText(s){
 }
 function gotoSlide(i){
  navigationVersion++;routeGroup.clear();activeRoute=null;activeTrail=null;cameraPath=null;
- index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);finalWeb.visible=(index>=slides.length-2);earthHolder.position.x=(s.kind==='end'?1.72:0);
+ index=clamp(i,0,slides.length-1);const s=slides[index];setText(s);finalWeb.visible=false;earthHolder.position.x=(s.kind==='end'?1.72:0);
  // Load the geographic Dubai map while Topic 2 is on screen, so the first flight isn't blank.
  if(s.chapter===2&&!realMap&&!mapBroken)prepareMap();
  if(s.kind==='blank'||s.kind==='timer'){cameraTween=null;switchMode('none');setParticleMode('off');return}
@@ -1028,7 +1104,7 @@ function gotoSlide(i){
   else{switchMode('dubai');tweenCamera(dubaiPoses[s.shot],3100)}
   return;
  }
- switchMode('globe');network.visible=true;earthHolder.visible=true; setParticleMode('off');
+ switchMode('globe');network.visible=true;earthHolder.visible=true; setParticleMode(index>=slides.length-2?'final':'off');
  markPlace(s.kind==='place'?s.place:null);
  if(s.kind==='place'){
   if(s.from)travel(s.from,s.place);else tweenCamera(camGlobe(s.place),3100);

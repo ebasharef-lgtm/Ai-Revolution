@@ -98,7 +98,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
   'use strict';
   const LIMIT = 21; // 22 slides, numbered 0–21.
   const $ = id => document.getElementById(id);
-  const app = {index: 0, startedAt: 0, bridge: null};
+  const app = {index: 0, startedAt: 0, bridge: null, stage: 'Loading 3D renderer…', loadError: null};
   window.AIAppNavigation = app;
   const clockRate = 29000;
   let lastGesture = -Infinity;
@@ -120,8 +120,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
     // The renderer is not ready. Explain the fallback instead of freezing.
     headline.classList.add('show');
     $('eyebrow').textContent='PRESENTATION NAVIGATION';
-    $('title').textContent='3D scene loading…';
-    $('subtitle').textContent='The controls are working. If this screen remains, the 3D engine could not initialize. Check the browser connection and graphics support.';
+    $('title').textContent=app.loadError ? '3D startup error' : '3D scene loading…';
+    $('subtitle').textContent=app.loadError || app.stage;
   }
   function jump(requested) {
     if($('sources')?.classList.contains('visible'))return;
@@ -134,6 +134,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
       catch(error){console.error('3D slide failed; navigation fallback activated',error);app.bridge=null;paintFallback();}
     }else paintFallback();
   }
+  app.status=message=>{app.stage=String(message);if(!app.bridge && app.index>1)paintFallback();};
+  app.fail=message=>{app.loadError=String(message).slice(0,350);console.error('AI Revolution startup:',app.loadError);if(!app.bridge)paintFallback();};
+  window.addEventListener('error',e=>{
+    if(!app.bridge && (e.message||e.error))app.fail('JavaScript: '+(e.error?.message||e.message));
+  });
+  window.addEventListener('unhandledrejection',e=>{
+    if(!app.bridge)app.fail('Loading error: '+(e.reason?.message||e.reason||'unknown error'));
+  });
   app.next=()=>jump(app.index+1);
   app.prev=()=>jump(app.index-1);
   app.bind=function(bridge){
@@ -196,14 +204,43 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--deep)
 })();
 </script>
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+// Independent ES module loading: if one CDN is blocked, use the next.
+const threeSources=[
+ 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js',
+ 'https://unpkg.com/three@0.160.0/build/three.module.js',
+ 'https://esm.sh/three@0.160.0'
+];
+let THREE, threeLoadErrors=[];
+for(let j=0;j<threeSources.length;j++){
+ const url=threeSources[j];
+ window.AIAppNavigation?.status(`Loading 3D library (${j+1}/${threeSources.length})…`);
+ try{
+  // Timeout gives the alternative provider a chance even if a CDN stalls.
+  THREE=await Promise.race([
+   import(url),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error('Request timed out')),8000))
+  ]);
+  break;
+ }catch(err){
+  console.warn('Three.js loading from '+url+' failed',err);
+  threeLoadErrors.push((new URL(url)).hostname+': '+(err?.message||err));
+ }
+}
+if(!THREE){
+ const msg='Three.js could not download. '+threeLoadErrors.join(' | ');
+ window.AIAppNavigation?.fail(msg);
+ throw new Error(msg);
+}
+window.AIAppNavigation?.status('Creating WebGL renderer…');
+try{
+
 const $=x=>document.getElementById(x), lerp=THREE.MathUtils.lerp, clamp=THREE.MathUtils.clamp;
 const world=$('world'), counter=$('countWrap'), headline=$('headline'), fact=$('fact'), chapter=$('chapter');
 const fmt=n=>Math.floor(n).toLocaleString('en-US');
 let index=0, startTime=0, started=false, sourcesOn=false, moving=false;
 let navigationVersion=0;
 const canvasScene=new THREE.Scene(); canvasScene.background=new THREE.Color('#030b18');
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+const renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'default'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,('ontouchstart' in window)?1.25:1.8));renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;
 world.appendChild(renderer.domElement);
@@ -238,7 +275,10 @@ function prepareMap(){
       'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],6],
       'fill-extrusion-base':['coalesce',['get','render_min_height'],0]} });}catch(e){console.warn('3D building layer unavailable',e)}
    }
-   installMapModels(realMap);
+   // Build map-only 3D objects after the globe has already started.
+   try{ensureMapScenes();installMapModels(realMap);}
+   catch(err){console.error('Optional geographic 3D objects failed',err);}
+
    if(activeMode==='map'){mapDiv.classList.add('visible');world.style.opacity='0';}
   });
   realMap.on('error',e=>{console.warn('Map tiles unavailable',e)});
@@ -450,6 +490,11 @@ const concrete=mat(0x748596),glass=mat(0x195782,.16,.66),darkGlass=mat(0x16334e,
 function box(w,h,d,m,x,y,z,parent=dubaiWorld){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);parent.add(mesh);return mesh}
 function cyl(rt,rb,h,m,x,y,z,parent=dubaiWorld,radial=16){const mesh=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,radial),m);mesh.position.set(x,y,z);parent.add(mesh);return mesh}
 function plane(w,d,m,x,y,z,parent=dubaiWorld){const o=new THREE.Mesh(new THREE.PlaneGeometry(w,d),m);o.rotation.x=-Math.PI/2;o.position.set(x,y,z);parent.add(o);return o}
+let dubaiFallbackBuilt=false;
+let airplane=null, parkedPlanes=[], cars=[], ship=null, ship2=null, school=null;
+function buildDubaiFallback(){
+ if(dubaiFallbackBuilt)return;
+ dubaiFallbackBuilt=true;
 const ground=plane(1300,400,mat(0x243a49),210,-.15,-15);
 // Physically separate the harbour far away from Downtown and the school.
 const portWorld=new THREE.Group();portWorld.position.x=240;dubaiWorld.add(portWorld);
@@ -473,20 +518,20 @@ cyl(1.1,1.6,16,concrete,18,8,0,terminal);cyl(2.5,1.9,2.4,glass,18,16.9,0,termina
 plane(82,26,asphalt,-62,.02,26);for(let z=15;z<38;z+=4){box(2,.025,.15,roadWhite,-62,.045,z)}
 for(let x=-95;x<-26;x+=4){box(.35,.16,.35,nightLight,x,.2,13);box(.35,.16,.35,new THREE.MeshBasicMaterial({color:0xffdf8c}),x,.2,39)}
 // 3D airplane assembled in a moving group
-const airplane=new THREE.Group();dubaiWorld.add(airplane);
+airplane=new THREE.Group();dubaiWorld.add(airplane);
 const fuselage=new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.1,15,20),mat(0xf2f6fb,.4,.32));fuselage.rotation.z=Math.PI/2;airplane.add(fuselage);
 const nose=new THREE.Mesh(new THREE.ConeGeometry(1.05,3,20),mat(0xf4f9ff,.4,.3));nose.rotation.z=-Math.PI/2;nose.position.x=9;airplane.add(nose);
 const tail=new THREE.Mesh(new THREE.ConeGeometry(.9,2.2,16),mat(0xdce9f6));tail.rotation.z=Math.PI/2;tail.position.x=-8;airplane.add(tail);
 box(8,.25,17,mat(0xe9f2ff,.4,.25),.2,.05,0,airplane);box(3,.28,7,mat(0xe9f2ff,.4,.25),-6,.4,0,airplane);box(2.2,4.2,.25,mat(0xe8eff9,.5,.2),-6.7,2,0,airplane);
 for(let z of [-4.7,4.7]){const eng=cyl(.8,.8,2.5,steel,0,-1,z,airplane);eng.rotation.z=Math.PI/2}
 // Extra parked / taxiing aircraft to make the airport feel busier
-const parkedPlanes=[];
+parkedPlanes=[];
 function parkedPlane(x,z,rot=0){const pg=new THREE.Group();pg.position.set(x,1.8,z);pg.rotation.y=rot;dubaiWorld.add(pg);const f=new THREE.Mesh(new THREE.CylinderGeometry(.65,.72,8,16),mat(0xf3f7fc,.45,.3));f.rotation.z=Math.PI/2;pg.add(f);const n=new THREE.Mesh(new THREE.ConeGeometry(.65,1.8,16),mat(0xf4f9ff,.4,.3));n.rotation.z=-Math.PI/2;n.position.x=4.9;pg.add(n);box(4.8,.16,10.4,mat(0xe9f2ff,.4,.25),.15,.05,0,pg); parkedPlanes.push(pg);}
 parkedPlane(-49,-2,.18); parkedPlane(-38,-7,.08);
 // Highway from airport towards skyline: perspective actual mesh and individual moving cars
 box(113,.1,11,asphalt,-25,.02,12);for(let x=-83;x<33;x+=7)for(const z of [9.5,14.5])box(3,.025,.08,roadWhite,x,.09,z);
 for(let x=-84;x<35;x+=13){cyl(.075,.075,4,steel,x,2.1,6.4);box(.16,.16,2,nightLight,x,4.12,7.2);}
-const cars=[];
+cars=[];
 function car(color,speed,x,z){const grp=new THREE.Group();grp.position.set(x,.75,z);dubaiWorld.add(grp);box(3.2,.65,1.5,mat(color,.34,.3),0,.25,0,grp);box(1.7,.65,1.2,darkGlass,-.25,.78,0,grp);for(let wx of [-.95,1])for(let wz of [-.8,.8]){let wheel=cyl(.35,.35,.25,mat(0x101922),wx,-.2,wz,grp);wheel.rotation.x=Math.PI/2;}for(const zz of [-.48,.48])box(.07,.13,.14,nightLight,1.64,.4,zz,grp);cars.push({grp,speed,start:x,dir:z>12?-1:1});}
 car(0xdddddd,7,-65,10);car(0x1d8bcd,5,-34,14);car(0xc9b48b,6,-12,10);car(0x152c4d,7,-51,14);
 // Separated Mirdif-like low-rise neighborhood visible on the road camera pass.
@@ -500,14 +545,14 @@ for(let i=0;i<22;i++){
 box(54,1,22,concrete,54,.1,-42,portWorld);
 for(let gx of [38,55,72]){for(let j=0;j<4;j++)for(let k=0;k<3;k++){box(5,2.6,2.7,containerMats[(j+k+gx)%containerMats.length],gx+j*1.8,1.4+k*2.7,-39+j*2.5,portWorld)}}
 for(let x of [37,62,82]){box(.45,25,.45,steel,x,12.5,-25,portWorld);box(.45,25,.45,steel,x+16,12.5,-25,portWorld);box(18,.55,1.1,steel,x+8,25,-25,portWorld);box(1,3,1,containerMats[2],x+9,21,-25,portWorld);box(.12,13,.12,steel,x+9,17,-25,portWorld);}
-const ship=new THREE.Group();ship.position.set(56,.7,5);portWorld.add(ship);
+ship=new THREE.Group();ship.position.set(56,.7,5);portWorld.add(ship);
 const hull=box(42,5,12,mat(0x9c2536,.48,.3),0,0,0,ship);hull.scale.set(1,1,1);box(41,.45,11.8,mat(0x20293a),0,2.6,0,ship);
 for(let i=0;i<6;i++)for(let k=0;k<2;k++){box(5,2.8,5.2,containerMats[(i+k)%containerMats.length],-15+i*5.6,4.2+k*2.8,-2.9+(k%2)*5.6,ship)}
 box(6,7,8,mat(0xe5e9ef),15.5,6.5,0,ship);box(.4,7,.4,steel,16,12,0,ship);
 // A second ship adds life to the port
-const ship2=new THREE.Group();ship2.position.set(84,.55,-6);portWorld.add(ship2);box(28,3.8,9,mat(0x24496e,.5,.3),0,0,0,ship2);box(7,5,7,mat(0xe5e9ef),9,4.4,0,ship2);
+ship2=new THREE.Group();ship2.position.set(84,.55,-6);portWorld.add(ship2);box(28,3.8,9,mat(0x24496e,.5,.3),0,0,0,ship2);box(7,5,7,mat(0xe5e9ef),9,4.4,0,ship2);
 // School exterior to indoor classroom: fully geometrical coherent room
-const school=new THREE.Group();school.position.set(530,0,-20);dubaiWorld.add(school);
+school=new THREE.Group();school.position.set(530,0,-20);dubaiWorld.add(school);
 // Walls are hollow; no solid box blocks the camera entering the classroom.
 for (const px of [-15.5,15.5]) box(.9,14,.9,mat(0xc9bca6),px,7,12.4,school);
 box(34,1,27,mat(0xa6a19d),0,14.3,0,school);
@@ -572,6 +617,9 @@ const signCanvas=document.createElement('canvas');signCanvas.width=1536;signCanv
 // Removed the photo billboard that cut through the school's 3D geometry.
 // Exterior detail is now a 3D reconstruction; the geographical approach uses real map data.
 
+
+}
+
 // Geographic 3D models. Unlike the fallback city scene, these are rendered DIRECTLY
 // into the MapLibre WebGL canvas, so planes/cars/ships stay visible over the real map.
 const geoModels={};
@@ -597,7 +645,7 @@ function geoPlane(parent,mx,my,mz,scale=1){
 // DXB - wide, full-scale modelled airport environment instead of a miniature runway.
 // The two long runways, terminal concourses, taxiways, aprons and aircraft form one connected site.
 // This is a geographically positioned illustration, not a surveyed airport digital twin.
-{
+function buildAirportMapScene(){
  const sc=geoScene('airport',[55.3657,25.2532]);
  const airfield=new THREE.Group(); airfield.rotation.y=.45;sc.add(airfield);
  const runwayMat=mat(0x2c3641,.98),taxiMat=mat(0x475663,.95),apronMat=mat(0x687681,.98);
@@ -658,7 +706,7 @@ function geoCar(parent,paint,x,z,direction=1){
  return grp;
 }
 // Traffic follows rendered OpenStreetMap roads. Never draw a second straight asphalt slab.
-{
+function buildRoadMapScene(){
  const sc=geoScene('road',[55.2678,25.1706]);
  const vehicles=[];const colors=[0xf6f6f2,0x275789,0xeac38d,0x36a7c2,0xd7e3f1,0x1e426f,0xeec45a];
  for(let i=0;i<22;i++){
@@ -713,7 +761,7 @@ function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
  geoBox(root,18,20,18,geoFinish,61,24,0);geoBox(root,14,7,16,geoWindow,62,37,0);return root;
 }
 // Large connected terminal, based on Jebel Ali's long quays, crane rows and vast container yards.
-{
+function buildPortMapScene(){
  const sc=geoScene('port',[55.0661,24.9922]);
  const site=new THREE.Group();site.rotation.y=.18;sc.add(site);
  // Quay and container aprons read as a port district rather than a small prop.
@@ -758,7 +806,8 @@ function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
 
 // Place the SAME school geometry into the geographic 3D map near Academic City.
 // During the transition this matches the exterior shown by the independent classroom renderer.
-{
+function buildSchoolMapScene(){
+ buildDubaiFallback();
  const sc=geoScene('schoolOutside',[55.40215,25.10773]);
  const model=school.clone(true);model.position.set(0,0,0);model.rotation.y=.06;sc.add(model);
 }
@@ -790,6 +839,15 @@ function animateMapVehicles(t){
  }
 }
 
+let geoScenesBuilt=false;
+function ensureMapScenes(){
+ if(geoScenesBuilt)return;
+ geoScenesBuilt=true;
+ for(const [label,build] of [['airport',buildAirportMapScene],['roads',buildRoadMapScene],['port',buildPortMapScene],['school',buildSchoolMapScene]]){
+  try{build();}
+  catch(err){console.error('Optional '+label+' 3D map scene failed; other slides continue',err);}
+ }
+}
 function installMapModels(map){
  if(map.getLayer('presentation-live-3d'))return;
  const layer={id:'presentation-live-3d',type:'custom',renderingMode:'3d',
@@ -807,7 +865,8 @@ function installMapModels(map){
   if(!raw||!Array.isArray(raw)&&!(raw instanceof Float32Array)&&!(raw instanceof Float64Array))return;
   this.camera.projectionMatrix=new THREE.Matrix4().fromArray(raw).multiply(correction);
   animateMapVehicles(performance.now()*.001);
-  this.renderer.resetState();this.renderer.render(m.scene,this.camera);
+  try{this.renderer.resetState();this.renderer.render(m.scene,this.camera);}
+  catch(error){console.error('Optional geographic map layer failed',error);return;}
   // Request an idle refresh at a controlled rate rather than forcing a
   // continuous max-FPS MapLibre+Three.js render cycle on mobile devices.
   if(!this.repaintTimer){this.repaintTimer=setTimeout(()=>{
@@ -846,6 +905,10 @@ function flyThroughSchool(){
 }
 function switchMode(mode){
  if(activeMode===mode)return;
+ if(mode==='dubai'){
+  try{buildDubaiFallback();}
+  catch(err){console.error('Optional fallback Dubai scene error',err);window.AIAppNavigation?.status('Dubai fallback scene unavailable: '+(err?.message||err));}
+ }
  activeMode=mode;
  globeWorld.visible=mode==='globe';dubaiWorld.visible=mode==='dubai';
  canvasScene.background.set(mode==='dubai'?0x3b617e:0x030b18);
@@ -988,7 +1051,7 @@ function render(now){requestAnimationFrame(render);const dt=clock.getDelta();fra
   webEdges.material.opacity=.32+.11*Math.sin(elapsed*1.15);
  }
  drawParticles(now);
- if(activeMode==='dubai'){
+ if(activeMode==='dubai'&&dubaiFallbackBuilt&&airplane&&ship&&ship2){
   const elapsed=now*.001;
   airplane.position.set(-69+(Math.sin(elapsed*.19)+1)*5,9+Math.sin(elapsed*.31)*.9,-2);airplane.rotation.y=.08;
   parkedPlanes.forEach((p,i)=>{p.position.x += Math.sin(elapsed*.25+i)*.01;});
@@ -999,5 +1062,11 @@ function render(now){requestAnimationFrame(render);const dt=clock.getDelta();fra
  renderer.render(canvasScene,camera);
 }
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,('ontouchstart' in window)?1.25:1.8))});requestAnimationFrame(render);
+window.AIAppNavigation?.status('3D engine ready');
+}catch(err){
+ console.error('3D scene startup failed:',err);
+ window.AIAppNavigation?.fail((err?.name||'Error')+': '+(err?.message||String(err)));
+}
+
 </script>
 </body></html>

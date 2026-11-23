@@ -287,10 +287,6 @@ function prepareMap(){
    // Build map-only 3D objects after the globe has already started.
    try{ensureMapScenes();installMapModels(realMap);}
    catch(err){console.error('Optional geographic 3D objects failed',err);}
-   realMap.on('idle',()=>{
-     if(activeMode==='map'&&slides[index]?.shot==='port'&&geoVehicleState.port?.terminal&&!geoVehicleState.port.quayAligned)
-       alignPortToMappedQuay();
-   });
    if(activeMode==='map'){mapDiv.classList.add('visible');world.style.opacity='0';}
   });
   realMap.on('error',e=>{console.warn('Map tiles unavailable',e)});
@@ -300,7 +296,6 @@ function mapFly(shot,duration=3400){
  prepareMap();const site=dubaiSites[shot];if(!site)return false;
  if(realMap){realMap.resize();realMap.flyTo({...site,duration,curve:1.3,essential:true});
   if(shot==='road'){const version=navigationVersion;setTimeout(()=>{if(version===navigationVersion&&slides[index]?.shot==='road')snapCarsToMappedRoads();},duration+550)}
-  if(shot==='port'){const version=navigationVersion;setTimeout(()=>{if(version===navigationVersion&&slides[index]?.shot==='port')alignPortToMappedQuay();},duration+400)}
   return true}
  return false;
 }
@@ -558,12 +553,13 @@ function cyl(rt,rb,h,m,x,y,z,parent=dubaiWorld,radial=16){const mesh=new THREE.M
 function plane(w,d,m,x,y,z,parent=dubaiWorld){const o=new THREE.Mesh(new THREE.PlaneGeometry(w,d),m);o.rotation.x=-Math.PI/2;o.position.set(x,y,z);parent.add(o);return o}
 let dubaiFallbackBuilt=false;
 let airplane=null, parkedPlanes=[], cars=[], ship=null, ship2=null, school=null;
+let portWorldRef=null,portShowcaseReady=false,portShowcaseShips=[],portShowcaseTrucks=[];
 function buildDubaiFallback(){
  if(dubaiFallbackBuilt)return;
  dubaiFallbackBuilt=true;
 const ground=plane(1300,400,mat(0x243a49),210,-.15,-15);
 // Physically separate the harbour far away from Downtown and the school.
-const portWorld=new THREE.Group();portWorld.position.x=240;dubaiWorld.add(portWorld);
+const portWorld=new THREE.Group();portWorld.position.x=240;dubaiWorld.add(portWorld);portWorldRef=portWorld;
 const sea=plane(88,95,mat(0x0b4762,.14,.33),50,-.07,-12,portWorld); // water exists only in the harbour sector
 const skyLight=new THREE.HemisphereLight(0xc6e8ff,0x2b4054,2.0);dubaiWorld.add(skyLight);
 const dubaiSun=new THREE.DirectionalLight(0xffe4be,3.4);dubaiSun.position.set(-45,65,22);dubaiWorld.add(dubaiSun);
@@ -850,113 +846,124 @@ function geoCargoShip(sc,x,z,color=0xb9343f,scale=1){
  geoBox(root,18,20,18,geoFinish,61,24,0);geoBox(root,14,7,16,geoWindow,62,37,0);return root;
 }
 // Large connected terminal, based on Jebel Ali's long quays, crane rows and vast container yards.
-function buildPortMapScene(){
- const sc=geoScene('port',[55.0661,24.9922]);
- const terminal=new THREE.Group();terminal.rotation.y=0;sc.add(terminal);
- const dock=mat(0x879aa7,.91),asphaltYard=mat(0x667987,.93),cranePaint=mat(0xccad45,.55,.35);
- // Ground from OpenStreetMap remains visible. Add only the working quay edge,
- // crane tracks, container bases and narrow service roads on the landward side.
- geoBox(terminal,1530,.22,24,dock,-30,.12,-93);
- geoBox(terminal,1510,.06,6,asphaltYard,-30,.17,-69);
- for(const z of [25,130,235,340]){
-  geoBox(terminal,1390,.06,8,asphaltYard,-25,.14,z);
-  for(let x=-685;x<690;x+=58)geoBox(terminal,10,.025,.6,roadWhite,x,.20,z);
+// Real-location fly-in followed by a cohesive, custom 3D Jebel Ali container terminal.
+// Map overlays made the ship/crane/container meshes straddle different shorelines.
+// This one waterfront composition has a single clear axis: -Z sea, +Z dry land.
+function buildPortShowcase(){
+ if(portShowcaseReady)return;
+ buildDubaiFallback();
+ if(!portWorldRef)return;
+ portShowcaseReady=true;
+ portWorldRef.clear();
+ portWorldRef.position.set(240,0,0);
+ const water=new THREE.MeshStandardMaterial({color:0x16445e,roughness:.34,metalness:.14});
+ const pavement=mat(0x83939c,.96,.05),quayMat=mat(0xaebac1,.78,.1);
+ const darkRoad=mat(0x465563,.95),craneYellow=mat(0xe9bb44,.53,.3);
+ const craneFrame=mat(0x447390,.58,.33),craneDark=mat(0x324a5b,.7,.3);
+ const bright=new THREE.MeshBasicMaterial({color:0xffe3a6});
+ // Both surfaces meet exactly at local Z=5. No crossing or tilting on the map.
+ plane(540,262,water,0,.06,-126,portWorldRef);
+ plane(540,248,pavement,0,.095,129,portWorldRef);
+ box(536,.74,8,quayMat,0,.45,5,portWorldRef);
+ box(534,.18,1.7,craneYellow,0,1.0,1,portWorldRef);
+ // Subtle water ripples and a lit continuous berth edge.
+ const rippleMat=new THREE.MeshBasicMaterial({color:0x86c9d6,transparent:true,opacity:.10,depthWrite:false});
+ for(let i=0;i<20;i++){
+  const x=-247+i*26;
+  box(13,.014,.25,rippleMat,x,.095,-104-(i%4)*24,portWorldRef);
  }
- // Separated storage blocks, not one endless raster of tiny multicoloured objects.
- const colors=[0x286da5,0xc74439,0xdbaa45,0x308c8b,0xdfebef,0x385d78].map(c=>new THREE.Color(c));
- const layout=[];
- for(let block=0;block<5;block++)for(let row=0;row<3;row++)
-  for(let slot=0;slot<13;slot++)for(let level=0;level<2+(block+row)%2;level++){
-   // 60m drive aisles between blocks and 24m wide working lanes.
-   const x=-680+block*274+slot*16.2;
-   const z=68+row*88+(block%2)*7;
-   layout.push({x,z,y:1.8+level*3.0,color:(block+row+slot+level)%colors.length});
-  }
- const containerGeo=new THREE.BoxGeometry(12.2,2.8,2.75);
- const stacks=new THREE.InstancedMesh(containerGeo,mat(0xffffff,.82),layout.length);
+ for(let x=-250;x<=250;x+=19){
+  const bollard=cyl(.65,.75,1.2,craneDark,x,.84,1.5,portWorldRef);
+  box(1,.15,.38,craneYellow,x,1.46,1.5,portWorldRef);
+ }
+ // Straight service lanes and marked truck routes on the dry-land side.
+ for(const z of [43,96,155]){
+  box(504,.10,7,darkRoad,0,.19,z,portWorldRef);
+  for(let x=-242;x<246;x+=21)box(9,.018,.28,roadWhite,x,.26,z,portWorldRef);
+ }
+ // Containers are physical, easily visible blocks arranged in proper stacks.
+ // Aisles separate the blocks rather than forming hundreds of thin colored lines.
+ const colors=[0x3b8db7,0xcd5848,0xe4b64c,0x398c92,0xced8dd,0x426c9a,0x81949f].map(v=>new THREE.Color(v));
+ const placements=[];
+ for(let block=0;block<3;block++)
+  for(let row=0;row<3;row++)
+   for(let slot=0;slot<8;slot++)
+    for(let height=0;height<3+((block+slot)%3===0?1:0);height++){
+     placements.push({
+      x:-192+block*133+slot*12.5,
+      z:62+row*29,
+      y:2.1+height*3.25,
+      color:(block*2+row+slot+height)%colors.length
+     });
+    }
+ const crates=new THREE.InstancedMesh(new THREE.BoxGeometry(11.7,3,5.8),mat(0xffffff,.83),placements.length);
  const dummy=new THREE.Object3D();
- for(let i=0;i<layout.length;i++){
-  const p=layout[i];dummy.position.set(p.x,p.y,p.z);dummy.updateMatrix();
-  stacks.setMatrixAt(i,dummy.matrix);stacks.setColorAt(i,colors[p.color]);
+ for(let i=0;i<placements.length;i++){
+  const p=placements[i];dummy.position.set(p.x,p.y,p.z);dummy.updateMatrix();
+  crates.setMatrixAt(i,dummy.matrix);crates.setColorAt(i,colors[p.color]);
  }
- stacks.instanceMatrix.needsUpdate=true;
- if(stacks.instanceColor)stacks.instanceColor.needsUpdate=true;
- terminal.add(stacks);
- // Ship-to-shore cranes point their booms out over the water (negative z).
- const cranes=[];
- for(let j=0;j<9;j++){
-  const crane=new THREE.Group();crane.position.set(-630+j*160,0,-86);terminal.add(crane);
-  for(const x of [-12,12]){
-   geoBox(crane,2.8,67,3.0,cranePaint,x,33,18);
-   geoBox(crane,2.8,67,3.0,cranePaint,x,33,46);
-  }
-  geoBox(crane,102,3.5,6,cranePaint,0,68,-14);
-  geoBox(crane,2.5,3,95,cranePaint,0,73,-25);
-  geoBox(crane,.5,37,.5,geoMetal,0,49,-72);
-  geoBox(crane,11,3,7,containerMats[j%containerMats.length],0,29,-72);
-  cranes.push(crane);
+ crates.instanceMatrix.needsUpdate=true;
+ if(crates.instanceColor)crates.instanceColor.needsUpdate=true;
+ crates.frustumCulled=false;portWorldRef.add(crates);
+ // Two broad warehouses and an inland logistics road finish the composition.
+ for(const x of [-135,110]){
+  box(155,13,26,mat(0x9dafbc,.8),x,7,205,portWorldRef);
+  box(161,1.4,30,mat(0xc4d0d5,.7),x,14,205,portWorldRef);
+  for(let j=0;j<6;j++)box(17,5,.25,geoWindow,x-62+j*23,6.7,191.7,portWorldRef);
  }
- // All three hulls are on the water side of the quay, with their sides facing the cranes.
- const first=geoCargoShip(terminal,-390,-193,0xa83342,1.58);
- const second=geoCargoShip(terminal,70,-220,0x275d85,1.46);
- const third=geoCargoShip(terminal,505,-183,0x22746f,1.2);
- geoVehicleState.port={first,second,third,cranes,terminal,quayAligned:false,alignmentAttempts:0};
-}
-// Fit this illustrative 3D quay to the coastline already drawn by OpenStreetMap.
-// The terminal is centered on SMDG's verified Jebel Ali CT1 coordinates.
-function alignPortToMappedQuay(){
- const state=geoVehicleState.port,model=geoModels.port;
- if(!state?.terminal||!model||!realMap||!mapReady)return false;
- if(state.quayAligned)return true;
- if(++state.alignmentAttempts>10)return false;
- try{
-  const style=realMap.getStyle();
-  const waterLayers=(style?.layers||[]).filter(l=>l.type==='fill'&&/water|sea|ocean/i.test(l.id)&&!/label|pattern/i.test(l.id)).map(l=>l.id);
-  if(!waterLayers.length)return false;
-  const features=realMap.queryRenderedFeatures(undefined,{layers:waterLayers});
-  const [lon0,lat0]=model.origin,sz=111320,sx=sz*Math.cos(lat0*Math.PI/180);
-  const local=([lon,lat])=>({x:(lon-lon0)*sx,z:(lat0-lat)*sz});
-  const unproject=(x,z)=>[lon0+x/sx,lat0-z/sz];
-  const pointIsWater=(x,z)=>{
-   const pixel=realMap.project(unproject(x,z));
-   const canvas=realMap.getCanvas();
-   if(pixel.x<0||pixel.y<0||pixel.x>canvas.clientWidth||pixel.y>canvas.clientHeight)return null;
-   return realMap.queryRenderedFeatures(pixel,{layers:waterLayers}).length>0;
-  };
-  const edges=[];
-  for(const feature of features){
-   const geom=feature.geometry;
-   const polys=geom?.type==='Polygon'?[geom.coordinates]:geom?.type==='MultiPolygon'?geom.coordinates:[];
-   for(const poly of polys)for(const ring of poly)for(let i=1;i<ring.length;i++){
-    const a=local(ring[i-1]),b=local(ring[i]),dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
-    if(len<12||len>1700)continue;
-    const t=Math.min(1,Math.max(0,-(a.x*dx+a.z*dz)/(len*len)));
-    const near={x:a.x+dx*t,z:a.z+dz*t},distance=Math.hypot(near.x,near.z);
-    if(distance>1150)continue;
-    edges.push({near,tx:dx/len,tz:dz/len,distance});
-   }
+ // Five recognizable ship-to-shore gantry cranes. Their booms extend along Z
+ // (perpendicular to the berth), NOT parallel to the water's edge.
+ const beam=(a,b,r,m)=>{
+  const A=new THREE.Vector3(...a),B=new THREE.Vector3(...b),d=B.clone().sub(A);
+  const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d.length(),8),m);
+  mesh.position.copy(A).add(B).multiplyScalar(.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
+  portWorldRef.add(mesh);
+ };
+ for(const x of [-186,-94,-2,90,182]){
+  for(const dx of [-11,11]){
+   for(const z of [12,35])box(1.6,43,1.7,craneFrame,x+dx,21.6,z,portWorldRef);
+   beam([x+dx,2.1,13],[x+dx,44.5,35],.65,craneYellow);
   }
-  edges.sort((a,b)=>a.distance-b.distance);
-  // A tile seam has water on both sides; a true shore has water on only one.
-  for(const e of edges.slice(0,90)){
-   let tx=e.tx,tz=e.tz,nx=-tz,nz=tx;
-   const left=pointIsWater(e.near.x+nx*33,e.near.z+nz*33);
-   const right=pointIsWater(e.near.x-nx*33,e.near.z-nz*33);
-   if(left===null||right===null||left===right)continue;
-   // Terminal's local +Z contains container yards, and local -Z contains ships.
-   if(left){tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
-   const yaw=-Math.atan2(tz,tx);
-   const quay=new THREE.Vector3(0,0,-93).applyAxisAngle(new THREE.Vector3(0,1,0),yaw);
-   state.terminal.rotation.y=yaw;
-   state.terminal.position.set(e.near.x-quay.x+nx*7,0,e.near.z-quay.z+nz*7);
-   state.quayAligned=true;
-   realMap.triggerRepaint();
-   console.info('Port berth aligned to mapped shoreline',e.near,'heading:',yaw);
-   return true;
-  }
-  return false;
- }catch(e){console.warn('Waiting for Jebel Ali waterfront map tiles',e);return false;}
+  box(25,2,5,craneYellow,x,45.5,18,portWorldRef);
+  // Cantilever boom projects out over ship hatches (z negative).
+  box(3.4,2.5,115,craneYellow,x,53,-22,portWorldRef);
+  beam([x,47,32],[x,58,-72],.58,craneFrame);
+  beam([x-11,43,33],[x,54,-37],.38,craneFrame);
+  beam([x+11,43,33],[x,54,-37],.38,craneFrame);
+  box(11,5,6,craneDark,x,47,4,portWorldRef);
+  beam([x,52,-56],[x,25,-56],.16,geoMetal);
+  box(10,2.6,4,craneYellow,x,24,-56,portWorldRef);
+  for(const q of [-1,1])box(.45,11,.45,craneFrame,x+q*10,5,20,portWorldRef);
+ }
+ // Docked ships stay on water; their axes parallel the quay.
+ const a=geoCargoShip(portWorldRef,-117,-66,0xa02e3f,.62);
+ const b=geoCargoShip(portWorldRef,88,-68,0x286083,.65);
+ const c=geoCargoShip(portWorldRef,166,-171,0x217877,.38);
+ portShowcaseShips=[{obj:a,x:-117,y:1.3},{obj:b,x:88,y:1.3},{obj:c,x:166,y:1.3}];
+ // Light maintenance traffic moves only along land-side service lanes.
+ const paints=[0xeedfe4,0x52b5c1,0xe7bc56,0xdde5ec,0x7295bd];
+ portShowcaseTrucks=[];
+ for(let i=0;i<8;i++){
+  const z=[43,96,155][i%3];
+  const g=geoCar(portWorldRef,paints[i%paints.length],-205+i*54,z,i%2?1:-1);
+  g.scale.setScalar(.95);
+  portShowcaseTrucks.push({g,z,speed:3.5+i%3*1.8,sign:i%2?1:-1,phase:i*56});
+ }
+ console.info('Jebel Ali 3D harbor ready: ships on water, cranes at quay, stacked containers inland');
 }
+function animatePortShowcase(t){
+ for(let i=0;i<portShowcaseShips.length;i++){
+  const v=portShowcaseShips[i];
+  v.obj.position.set(v.x+.45*Math.sin(t*.13+i),v.y+.16*Math.sin(t*.84+i),v.obj.position.z);
+ }
+ for(const v of portShowcaseTrucks){
+  const x=((v.phase+t*v.speed)%466)-233;
+  v.g.position.x=v.sign*x;
+  v.g.position.z=v.z;
+ }
+}
+
 
 // Place the SAME school geometry into the geographic 3D map near Academic City.
 // During the transition this matches the exterior shown by the independent classroom renderer.
@@ -998,7 +1005,7 @@ let geoScenesBuilt=false;
 function ensureMapScenes(){
  if(geoScenesBuilt)return;
  geoScenesBuilt=true;
- for(const [label,build] of [['airport',buildAirportMapScene],['roads',buildRoadMapScene],['port',buildPortMapScene],['school',buildSchoolMapScene]]){
+ for(const [label,build] of [['airport',buildAirportMapScene],['roads',buildRoadMapScene],['school',buildSchoolMapScene]]){
   try{build();}
   catch(err){console.error('Optional '+label+' 3D map scene failed; other slides continue',err);}
  }
@@ -1011,6 +1018,7 @@ function installMapModels(map){
  },
  render(gl,mapMatrix){
   if(activeMode!=='map'||!mapReady)return;
+  if(slides[index]?.shot==='port')return; // A clean geographic fly-in precedes the coherent port close-up.
   const key=slides[index]?.shot;const m=geoModels[key];if(!m)return;
   const base=maplibregl.MercatorCoordinate.fromLngLat(m.origin,0),scale=base.meterInMercatorCoordinateUnits();
   const correction=new THREE.Matrix4().makeTranslation(base.x,base.y,base.z)
@@ -1041,7 +1049,7 @@ const dubaiPoses={
   skyline:{pos:new THREE.Vector3(31,24,46),look:new THREE.Vector3(3,16,-36),fov:43},
   airport:{pos:new THREE.Vector3(-80,11,46),look:new THREE.Vector3(-56,5,-12),fov:43},
   road:{pos:new THREE.Vector3(-138,5.5,35),look:new THREE.Vector3(-116,3,-26),fov:54},
-  port:{pos:new THREE.Vector3(333,21,31),look:new THREE.Vector3(296,8,-21),fov:48},
+  port:{pos:new THREE.Vector3(240,92,235),look:new THREE.Vector3(240,8,13),fov:49},
   schoolOutside:{pos:new THREE.Vector3(530,6.3,33),look:new THREE.Vector3(530,6.2,-17),fov:47},
   schoolInside:{pos:new THREE.Vector3(530,5,-22),look:new THREE.Vector3(530,7,-31),fov:62}
 };
@@ -1093,7 +1101,7 @@ const slides=[
  {kind:'dubai',chapter:3,shot:'skyline',headline:['03 / AI IN DUBAI','Now, back to Dubai.','We’ll travel from the airport, through the city, to the port.'],note:'MapLibre uses real geographic Dubai street maps and available 3D OSM buildings; not photorealistic satellite imagery.'},
  {kind:'dubai',chapter:3,shot:'airport',headline:['DUBAI STOP 1 • DXB','Connecting travellers.','Smart airport systems help Dubai connect people from around the world.'],fact:['AVIATION','Dubai International Airport','Smart Gates use biometric identity checks; not all smart systems are necessarily AI.'],note:'Camera flies into an airport scene with a 3D plane, runway and terminal.'},
  {kind:'dubai',chapter:3,shot:'road',headline:['DUBAI STOP 2 • CITY STREETS','Following the roads.','The camera follows real streets through Dubai while AI-assisted traffic tools help manage journeys.'],fact:['TRANSPORT','Dubai streets','Traffic analysis and urban mobility technology'],note:'Follow the real road network in Dubai; this section is not labelled Mirdif.'},
- {kind:'dubai',chapter:3,shot:'port',headline:['DUBAI STOP 3 • THE PORT','Connecting global trade.','Automation and digital logistics support goods moving through Jebel Ali.'],fact:['MARITIME','Jebel Ali Port','Container tracking and international logistics'],note:'Geographic camera flies to Jebel Ali on the actual map. 3D building details depend on available OSM data.'},
+ {kind:'dubai',chapter:3,shot:'port',headline:['DUBAI STOP 3 • THE PORT','Connecting global trade.','Automation and digital logistics support goods moving through Jebel Ali.'],fact:['MARITIME','Jebel Ali Port','Container tracking and international logistics'],note:'A real geographic map flight reaches Jebel Ali, followed by an illustrative close-up with coherent water, berth, cranes, ships and container storage.'},
  {kind:'dubai',chapter:4,shot:'schoolOutside',headline:['04 / DUBAI ACADEMIC CITY','From the city to our school.','At the German International School Dubai, students can learn responsible AI skills.'],note:'Camera follows a real Dubai map to the German International School Dubai in Academic City, then transitions to an illustrative detailed school model.'},
  {kind:'dubai',chapter:4,shot:'schoolInside',headline:['INSIDE OUR CLASSROOM','Teach skills for the future.','AI literacy, worker training and privacy education can start here.'],fact:['LOCAL SOLUTIONS','Educate · Train · Protect','Learn AI • Retrain workers • Protect privacy'],note:'The camera moves through a transparent facade into a 3D classroom inspired by DISD.'},
  {kind:'globe',chapter:4,headline:['THE GLOBAL AI REVOLUTION','Built by a connected world.','Its future should benefit the whole world — including people here in Dubai.'],note:'Return to the rotating connected globe and deliver the closing message.'},
@@ -1167,8 +1175,32 @@ function gotoSlide(i){
    }else{switchMode('dubai');tweenCamera(dubaiPoses.schoolOutside,3200)}
    return;
   }
+  // Fly to the true Jebel Ali location, then cut to a cohesive harbor scene.
+  // The ships, cranes and yard are drawn in the SAME 3D coordinate system;
+  // no coastline-detection transform can tilt or scatter them across the map.
+  if(s.shot==='port'){
+   prepareMap();
+   const token=navigationVersion;
+   const reveal=()=>{
+    if(token!==navigationVersion)return;
+    switchMode('dubai');
+    buildPortShowcase();
+    camera.position.set(240,120,275);
+    cameraTarget.set(240,8,8);camera.lookAt(cameraTarget);
+    tweenCamera(dubaiPoses.port,1750);
+   };
+   if(realMap&&mapReady){
+    switchMode('map');mapFly('port',2050);
+    setTimeout(()=>{
+     if(token!==navigationVersion)return;
+     flashTransition(700);
+     setTimeout(reveal,300);
+    },2110);
+   }else reveal();
+   return;
+  }
   prepareMap();
-  if(realMap&&mapReady){switchMode('map');mapFly(s.shot,s.shot==='port'?4600:3500)}
+  if(realMap&&mapReady){switchMode('map');mapFly(s.shot,3500)}
   else{switchMode('dubai');tweenCamera(dubaiPoses[s.shot],3100)}
   return;
  }
@@ -1205,6 +1237,7 @@ function render(now){requestAnimationFrame(render);const dt=clock.getDelta();fra
   webEdges.material.opacity=.32+.11*Math.sin(elapsed*1.15);
  }
  drawParticles(now);
+ if(activeMode==='dubai'&&slides[index]?.shot==='port'&&portShowcaseReady)animatePortShowcase(now*.001);
  if(activeMode==='dubai'&&dubaiFallbackBuilt&&airplane&&ship&&ship2){
   const elapsed=now*.001;
   airplane.position.set(-69+(Math.sin(elapsed*.19)+1)*5,9+Math.sin(elapsed*.31)*.9,-2);airplane.rotation.y=.08;
